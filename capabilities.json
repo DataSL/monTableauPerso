@@ -1,0 +1,50 @@
+{
+  "dataRoles": [
+    {
+      "displayName": "Catégorie (Nom)",
+      "name": "category",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "Valeurs (Chiffres)",
+      "name": "measure",
+      "kind": "Measure"
+    }
+  ],
+  "objects": {
+    "configLigne": {
+      "displayName": "Configuration Ligne",
+      "properties": {
+        "couleurTexte": {
+          "displayName": "Couleur Texte",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "arrierePlan": {
+          "displayName": "Couleur de Fond",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "taillePolice": {
+          "displayName": "Taille Police",
+          "type": { "formatting": { "fontSize": true } }
+        },
+        "police": {
+            "displayName": "Famille de Police",
+            "type": { "formatting": { "fontFamily": true } }
+        }
+      }
+    }
+  },
+  "dataViewMappings": [
+    {
+      "categorical": {
+        "categories": {
+          "for": { "in": "category" }
+        },
+        "values": {
+          "select": [ { "bind": { "to": "measure" } } ]
+        }
+      }
+    }
+  ],
+  "privileges": []
+}
