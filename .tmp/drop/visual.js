@@ -14,24 +14,41 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
 class Visual {
     target;
     host;
-    table;
-    divContainer; // <--- NOUVEAU CONTRÔLEUR
+    divContainer;
+    flexContainer;
+    leftColumn;
+    rightColumn;
+    tableLeft;
+    tableRight;
     allRowsData = [];
     categoricalData;
     currentSelectedLabel = "";
+    // Titres par défaut
+    titleLeft = "CHARGES";
+    titleRight = "PRODUITS";
     constructor(options) {
         this.host = options.host;
         this.target = options.element;
-        // 1. Création du conteneur de scroll
         this.divContainer = document.createElement("div");
-        this.divContainer.className = "scroll-wrapper"; // Lien avec le CSS
+        this.divContainer.className = "scroll-wrapper";
         this.target.appendChild(this.divContainer);
-        // 2. Le tableau est ajouté DANS le conteneur (et plus directement dans target)
-        this.table = document.createElement("table");
-        this.divContainer.appendChild(this.table);
+        this.flexContainer = document.createElement("div");
+        this.flexContainer.className = "accounting-container";
+        this.divContainer.appendChild(this.flexContainer);
+        this.leftColumn = document.createElement("div");
+        this.leftColumn.className = "half-column";
+        this.tableLeft = document.createElement("table");
+        this.leftColumn.appendChild(this.tableLeft);
+        this.flexContainer.appendChild(this.leftColumn);
+        this.rightColumn = document.createElement("div");
+        this.rightColumn.className = "half-column";
+        this.tableRight = document.createElement("table");
+        this.rightColumn.appendChild(this.tableRight);
+        this.flexContainer.appendChild(this.rightColumn);
     }
     update(options) {
-        this.table.innerHTML = "";
+        this.tableLeft.innerHTML = "";
+        this.tableRight.innerHTML = "";
         this.allRowsData = [];
         const dataView = options.dataViews[0];
         if (!dataView || !dataView.categorical || !dataView.categorical.categories)
@@ -39,18 +56,30 @@ class Visual {
         this.categoricalData = dataView.categorical;
         const categories = dataView.categorical.categories[0];
         const values = dataView.categorical.values ? dataView.categorical.values[0] : null;
+        // 1. Lecture des Titres personnalisés (Menu 0)
+        if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["enTetes"]) {
+            const titles = dataView.metadata.objects["enTetes"];
+            if (titles["titleLeft"])
+                this.titleLeft = titles["titleLeft"];
+            if (titles["titleRight"])
+                this.titleRight = titles["titleRight"];
+        }
+        // 2. Lecture Sélection (Menu 1)
         if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionMenu"]) {
             this.currentSelectedLabel = dataView.metadata.objects["selectionMenu"]["ligneActive"];
         }
         if (!this.currentSelectedLabel && categories.values.length > 0) {
             this.currentSelectedLabel = categories.values[0].toString();
         }
+        // 3. Boucle Données
         categories.values.forEach((catValue, index) => {
             const label = catValue.toString();
-            let rowSettings = {
+            let row = {
                 label: label,
                 amount: values ? values.values[index]?.toString() : "",
+                columnSide: "left",
                 sortIndex: index,
+                marginBottom: 0,
                 font: "'Segoe UI', sans-serif",
                 fontSize: 12,
                 bgLabel: "transparent",
@@ -65,89 +94,119 @@ class Visual {
                 const object = categories.objects[index];
                 if (object["styleLigne"]) {
                     const style = object["styleLigne"];
+                    if (style["columnPosition"])
+                        row.columnSide = style["columnPosition"];
                     if (style["ordreTri"] !== undefined)
-                        rowSettings.sortIndex = style["ordreTri"];
+                        row.sortIndex = style["ordreTri"];
+                    // Lecture de la marge
+                    if (style["marginBottom"])
+                        row.marginBottom = style["marginBottom"];
                     if (style["fontFamily"])
-                        rowSettings.font = style["fontFamily"];
+                        row.font = style["fontFamily"];
                     if (style["fontSize"])
-                        rowSettings.fontSize = style["fontSize"];
+                        row.fontSize = style["fontSize"];
                     if (style["bgLabel"])
-                        rowSettings.bgLabel = style["bgLabel"].solid.color;
+                        row.bgLabel = style["bgLabel"].solid.color;
                     if (style["fillLabel"])
-                        rowSettings.colorLabel = style["fillLabel"].solid.color;
+                        row.colorLabel = style["fillLabel"].solid.color;
                     if (style["boldLabel"] !== undefined)
-                        rowSettings.boldLabel = style["boldLabel"];
+                        row.boldLabel = style["boldLabel"];
                     if (style["italicLabel"] !== undefined)
-                        rowSettings.italicLabel = style["italicLabel"];
+                        row.italicLabel = style["italicLabel"];
                     if (style["bgAmount"])
-                        rowSettings.bgAmount = style["bgAmount"].solid.color;
+                        row.bgAmount = style["bgAmount"].solid.color;
                     if (style["fillAmount"])
-                        rowSettings.colorAmount = style["fillAmount"].solid.color;
+                        row.colorAmount = style["fillAmount"].solid.color;
                     if (style["boldAmount"] !== undefined)
-                        rowSettings.boldAmount = style["boldAmount"];
+                        row.boldAmount = style["boldAmount"];
                 }
             }
-            this.allRowsData.push(rowSettings);
+            this.allRowsData.push(row);
         });
-        this.allRowsData.sort((a, b) => a.sortIndex - b.sortIndex);
-        // --- AJOUT DE L'EN-TÊTE DU TABLEAU (THEAD) POUR LE STICKY HEADER ---
-        const thead = document.createElement("thead");
-        const trHead = document.createElement("tr");
-        const th1 = document.createElement("th");
-        th1.innerText = categories.source.displayName || "Libellé";
-        trHead.appendChild(th1);
-        const th2 = document.createElement("th");
-        th2.innerText = values ? values.source.displayName : "Montant";
-        th2.style.textAlign = "right";
-        trHead.appendChild(th2);
-        thead.appendChild(trHead);
-        this.table.appendChild(thead);
-        // -------------------------------------------------------------------
-        const tbody = document.createElement("tbody");
-        this.allRowsData.forEach(row => {
-            let displayAmount = "";
-            let rawVal = parseFloat(row.amount);
-            if (row.amount && !isNaN(rawVal) && rawVal !== 0) {
-                displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(rawVal);
-            }
-            const tr = document.createElement("tr");
-            tr.style.fontFamily = row.font;
-            tr.style.fontSize = row.fontSize + "px";
-            const tdName = document.createElement("td");
-            tdName.innerText = row.label;
-            tdName.style.backgroundColor = row.bgLabel;
-            tdName.style.color = row.colorLabel;
-            if (row.boldLabel)
-                tdName.style.fontWeight = "bold";
-            if (row.italicLabel)
-                tdName.style.fontStyle = "italic";
-            tr.appendChild(tdName);
-            const tdAmount = document.createElement("td");
-            tdAmount.innerText = displayAmount;
-            tdAmount.style.textAlign = "right";
-            tdAmount.style.backgroundColor = row.bgAmount;
-            tdAmount.style.color = row.colorAmount;
-            if (row.boldAmount)
-                tdAmount.style.fontWeight = "bold";
-            tr.appendChild(tdAmount);
-            tbody.appendChild(tr);
-        });
-        this.table.appendChild(tbody);
+        const renderTable = (targetTable, title, rows) => {
+            rows.sort((a, b) => a.sortIndex - b.sortIndex);
+            const thead = document.createElement("thead");
+            const trHead = document.createElement("tr");
+            const th = document.createElement("th");
+            th.colSpan = 2;
+            th.innerText = title;
+            trHead.appendChild(th);
+            thead.appendChild(trHead);
+            targetTable.appendChild(thead);
+            const tbody = document.createElement("tbody");
+            rows.forEach(row => {
+                const tr = document.createElement("tr");
+                let finalAmount = "";
+                let rawVal = parseFloat(row.amount);
+                if (row.amount && !isNaN(rawVal) && rawVal !== 0) {
+                    finalAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(rawVal);
+                }
+                tr.style.fontFamily = row.font;
+                tr.style.fontSize = row.fontSize + "px";
+                // --- GESTION DE L'ESPACE SANS DONNÉES VIDES ---
+                if (row.marginBottom > 0) {
+                    // On triche : on ajoute une bordure transparente en bas de la ligne
+                    // Cela crée un espace visuel qui pousse la ligne suivante
+                    const spacerHeight = row.marginBottom + "px";
+                    // Pour que ça marche bien sur les td
+                    tr.style.height = `calc(30px + ${spacerHeight})`;
+                }
+                const tdName = document.createElement("td");
+                tdName.innerText = row.label;
+                tdName.style.backgroundColor = row.bgLabel;
+                tdName.style.color = row.colorLabel;
+                if (row.boldLabel)
+                    tdName.style.fontWeight = "bold";
+                if (row.italicLabel)
+                    tdName.style.fontStyle = "italic";
+                // Application de la marge sur les cellules
+                if (row.marginBottom > 0) {
+                    tdName.style.borderBottom = `${row.marginBottom}px solid transparent`;
+                    tdName.style.backgroundClip = "padding-box"; // Important pour ne pas colorer la bordure
+                }
+                tr.appendChild(tdName);
+                const tdAmount = document.createElement("td");
+                tdAmount.innerText = finalAmount;
+                tdAmount.style.textAlign = "right";
+                tdAmount.style.backgroundColor = row.bgAmount;
+                tdAmount.style.color = row.colorAmount;
+                if (row.boldAmount)
+                    tdAmount.style.fontWeight = "bold";
+                // Application de la marge sur les cellules
+                if (row.marginBottom > 0) {
+                    tdAmount.style.borderBottom = `${row.marginBottom}px solid transparent`;
+                    tdAmount.style.backgroundClip = "padding-box";
+                }
+                tr.appendChild(tdAmount);
+                tbody.appendChild(tr);
+            });
+            targetTable.appendChild(tbody);
+        };
+        const leftRows = this.allRowsData.filter(r => r.columnSide !== "right");
+        const rightRows = this.allRowsData.filter(r => r.columnSide === "right");
+        renderTable(this.tableLeft, this.titleLeft, leftRows);
+        renderTable(this.tableRight, this.titleRight, rightRows);
     }
     enumerateObjectInstances(options) {
         const instances = [];
         if (!this.categoricalData)
             return instances;
         const categories = this.categoricalData.categories[0];
-        if (options.objectName === "selectionMenu") {
+        // MENU 0 : TITRES
+        if (options.objectName === "enTetes") {
             instances.push({
-                objectName: "selectionMenu",
-                selector: null,
-                properties: {
-                    ligneActive: this.currentSelectedLabel
-                }
+                objectName: "enTetes", selector: null,
+                properties: { titleLeft: this.titleLeft, titleRight: this.titleRight }
             });
         }
+        // MENU 1
+        if (options.objectName === "selectionMenu") {
+            instances.push({
+                objectName: "selectionMenu", selector: null,
+                properties: { ligneActive: this.currentSelectedLabel }
+            });
+        }
+        // --- MENU 2 ---
         if (options.objectName === "styleLigne") {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
             if (indexChoisi !== -1) {
@@ -155,20 +214,19 @@ class Visual {
                     .withCategory(categories, indexChoisi)
                     .createSelectionId();
                 let props = {
-                    ordreTri: indexChoisi,
-                    fontFamily: "",
-                    fontSize: 12,
-                    bgLabel: { solid: { color: "" } },
-                    fillLabel: { solid: { color: "black" } },
-                    boldLabel: false,
-                    italicLabel: false,
-                    bgAmount: { solid: { color: "" } },
-                    fillAmount: { solid: { color: "black" } },
-                    boldAmount: false
+                    columnPosition: "left", marginBottom: 0, ordreTri: indexChoisi,
+                    fontFamily: "", fontSize: 12,
+                    bgLabel: { solid: { color: "" } }, fillLabel: { solid: { color: "black" } },
+                    boldLabel: false, italicLabel: false,
+                    bgAmount: { solid: { color: "" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false
                 };
                 if (categories.objects && categories.objects[indexChoisi]) {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
+                        if (style["columnPosition"])
+                            props.columnPosition = style["columnPosition"];
+                        if (style["marginBottom"] !== undefined)
+                            props.marginBottom = style["marginBottom"];
                         if (style["ordreTri"] !== undefined)
                             props.ordreTri = style["ordreTri"];
                         if (style["fontFamily"])
@@ -193,7 +251,8 @@ class Visual {
                 }
                 instances.push({
                     objectName: "styleLigne",
-                    displayName: "Personnaliser : " + this.currentSelectedLabel,
+                    // CORRECTION ICI : Nom statique pour forcer l'affichage des propriétés
+                    displayName: "Réglages de la ligne",
                     selector: selectionId.getSelector(),
                     properties: props
                 });

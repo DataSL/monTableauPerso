@@ -1,31 +1,59 @@
 .scroll-wrapper {
     width: 100%;
     height: 100%;
-    overflow-y: auto; /* Active le scroll vertical */
-    overflow-x: hidden; /* Cache le scroll horizontal */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.accounting-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    min-height: 100%;
+    align-items: flex-start; /* Important pour l'alignement */
+}
+
+.half-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #ccc;
+}
+
+.half-column:last-child {
+    border-right: none;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; /* Essentiel pour éviter les espaces fantômes */
     font-family: 'Segoe UI', sans-serif;
+    table-layout: fixed; /* Stabilise les largeurs */
 }
 
-/* En-têtes figés (Sticky Header) */
+/* En-têtes figés */
 thead th {
     position: sticky;
     top: 0;
-    z-index: 1; /* Reste au-dessus du texte */
-    background-color: #f0f0f0; /* Couleur de fond par défaut des entêtes */
-    border-bottom: 2px solid #ccc;
-    text-align: left;
-    padding: 8px;
+    z-index: 10;
+    background-color: #003366; 
+    color: white;
+    text-transform: uppercase;
+    font-size: 14px;
+    text-align: center;
+    padding: 0; /* On gère le padding via line-height */
+    height: 40px; /* HAUTEUR FIGÉE POUR EVITER LE DECALAGE */
+    line-height: 40px;
+    border-bottom: 3px solid #eea20e;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 td {
-    padding: 5px 8px;
+    padding: 4px 8px;
     border-bottom: 1px solid #eee;
-    white-space: nowrap; /* Empêche le texte de passer à la ligne */
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    vertical-align: middle;
 }

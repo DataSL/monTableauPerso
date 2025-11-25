@@ -9,11 +9,17 @@ import "../style/visual.less";
 export declare class Visual implements IVisual {
     private target;
     private host;
-    private table;
     private divContainer;
+    private flexContainer;
+    private leftColumn;
+    private rightColumn;
+    private tableLeft;
+    private tableRight;
     private allRowsData;
     private categoricalData;
     private currentSelectedLabel;
+    private titleLeft;
+    private titleRight;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;

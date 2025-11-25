@@ -1,23 +1,28 @@
 {
   "dataRoles": [
-    {
-      "displayName": "Libellé",
-      "name": "category",
-      "kind": "Grouping"
-    },
-    {
-      "displayName": "Montant",
-      "name": "measure",
-      "kind": "Measure"
-    }
+    { "displayName": "Libellé", "name": "category", "kind": "Grouping" },
+    { "displayName": "Montant", "name": "measure", "kind": "Measure" }
   ],
   "objects": {
+    "enTetes": {
+        "displayName": "0. TITRES COLONNES",
+        "properties": {
+            "titleLeft": {
+                "displayName": "Titre Gauche",
+                "type": { "text": true }
+            },
+            "titleRight": {
+                "displayName": "Titre Droite",
+                "type": { "text": true }
+            }
+        }
+    },
     "selectionMenu": {
       "displayName": "1. SÉLECTION",
       "properties": {
         "ligneActive": {
-          "displayName": "Nom de la ligne à modifier",
-          "description": "Ecrivez le nom exact (ex: Total)",
+          "displayName": "Nom de la ligne",
+          "description": "Ecrivez le nom exact",
           "type": { "text": true } 
         }
       }
@@ -25,58 +30,41 @@
     "styleLigne": {
       "displayName": "2. PERSONNALISATION",
       "properties": {
+        "columnPosition": {
+            "displayName": "--- COLONNE (G/D) ---",
+            "type": { 
+                "enumeration": [
+                    { "value": "left", "displayName": "GAUCHE" },
+                    { "value": "right", "displayName": "DROITE" }
+                ] 
+            }
+        },
         "ordreTri": {
           "displayName": "Position (1=Haut)",
           "type": { "numeric": true }
         },
-        "fontFamily": {
-            "displayName": "Police (Globale)",
-            "type": { "formatting": { "fontFamily": true } }
+        "marginBottom": {
+            "displayName": "Espace APRES la ligne (px)",
+            "description": "Ajoute un espace vide sous cette ligne (ex: 20)",
+            "type": { "numeric": true }
         },
-        "fontSize": {
-            "displayName": "Taille (Globale)",
-            "type": { "formatting": { "fontSize": true } }
-        },
-        "bgLabel": {
-          "displayName": "Couleur FOND (Libellé)",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "fillLabel": {
-          "displayName": "Couleur TEXTE (Libellé)",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "boldLabel": {
-          "displayName": "Gras (Libellé)",
-          "type": { "bool": true }
-        },
-        "italicLabel": {
-            "displayName": "Italique (Libellé)",
-            "type": { "bool": true }
-        },
-        "bgAmount": {
-          "displayName": "Couleur FOND (Prix)",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "fillAmount": {
-          "displayName": "Couleur TEXTE (Prix)",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "boldAmount": {
-          "displayName": "Gras (Prix)",
-          "type": { "bool": true }
-        }
+        "fontFamily": { "displayName": "Police", "type": { "formatting": { "fontFamily": true } } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgLabel": { "displayName": "Couleur FOND (Libellé)", "type": { "fill": { "solid": { "color": true } } } },
+        "fillLabel": { "displayName": "Couleur TEXTE (Libellé)", "type": { "fill": { "solid": { "color": true } } } },
+        "boldLabel": { "displayName": "Gras (Libellé)", "type": { "bool": true } },
+        "italicLabel": { "displayName": "Italique (Libellé)", "type": { "bool": true } },
+        "bgAmount": { "displayName": "Couleur FOND (Prix)", "type": { "fill": { "solid": { "color": true } } } },
+        "fillAmount": { "displayName": "Couleur TEXTE (Prix)", "type": { "fill": { "solid": { "color": true } } } },
+        "boldAmount": { "displayName": "Gras (Prix)", "type": { "bool": true } }
       }
     }
   },
   "dataViewMappings": [
     {
       "categorical": {
-        "categories": {
-          "for": { "in": "category" }
-        },
-        "values": {
-          "select": [ { "bind": { "to": "measure" } } ]
-        }
+        "categories": { "for": { "in": "category" } },
+        "values": { "select": [ { "bind": { "to": "measure" } } ] }
       }
     }
   ],
