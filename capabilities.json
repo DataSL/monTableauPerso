@@ -1,7 +1,7 @@
 {
   "dataRoles": [
     {
-      "displayName": "Libellé",
+      "displayName": "Libellé (Lignes)",
       "name": "category",
       "kind": "Grouping"
     },
@@ -9,42 +9,56 @@
       "displayName": "Montant",
       "name": "measure",
       "kind": "Measure"
-    },
-    {
-      "displayName": "Côté (G/D)",
-      "name": "position",
-      "kind": "Grouping"
-    },
-    {
-      "displayName": "Type (Header/Total)",
-      "name": "rowType",
-      "kind": "Grouping"
-    },
-    {
-      "displayName": "Ordre de tri (1,2,3...)",
-      "name": "order",
-      "kind": "Grouping"
     }
   ],
   "objects": {
-    "configStyle": {
-      "displayName": "Styles Globaux",
+    "selectionMenu": {
+      "displayName": "1. CHOISIR LA LIGNE",
       "properties": {
-        "couleurHeader": { "type": { "fill": { "solid": { "color": true } } } }
+        "ligneActive": {
+          "displayName": "Ligne à modifier",
+          "type": { "text": true } 
+        }
+      }
+    },
+    "styleLigne": {
+      "displayName": "2. STYLE DE LA LIGNE",
+      "properties": {
+        "ordreTri": {
+          "displayName": "Position (1, 2, 3...)",
+          "type": { "numeric": true }
+        },
+        "fill": {
+          "displayName": "Couleur Texte",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "background": {
+          "displayName": "Couleur Fond",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "fontFamily": {
+            "displayName": "Police",
+            "type": { "formatting": { "fontFamily": true } }
+        },
+        "fontSize": {
+            "displayName": "Taille",
+            "type": { "formatting": { "fontSize": true } }
+        },
+        "bold": {
+          "displayName": "Gras",
+          "type": { "bool": true }
+        }
       }
     }
   },
   "dataViewMappings": [
     {
-      "table": {
-        "rows": {
-          "select": [
-            { "for": { "in": "category" } },
-            { "for": { "in": "measure" } },
-            { "for": { "in": "position" } },
-            { "for": { "in": "rowType" } },
-            { "for": { "in": "order" } }
-          ]
+      "categorical": {
+        "categories": {
+          "for": { "in": "category" }
+        },
+        "values": {
+          "select": [ { "bind": { "to": "measure" } } ]
         }
       }
     }

@@ -13,110 +13,167 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
 
 class Visual {
     target;
+    host;
+    table;
+    allRowsData = [];
+    categoricalData;
+    // Pour stocker quel nom est actuellement choisi dans la liste déroulante
+    currentSelectedLabel = "";
     constructor(options) {
+        this.host = options.host;
         this.target = options.element;
+        this.table = document.createElement("table");
+        this.target.appendChild(this.table);
     }
     update(options) {
-        this.target.innerHTML = "";
+        this.table.innerHTML = "";
+        this.allRowsData = [];
         const dataView = options.dataViews[0];
-        if (!dataView || !dataView.table)
+        if (!dataView || !dataView.categorical || !dataView.categorical.categories)
             return;
-        const table = dataView.table;
-        let rows = table.rows; // On récupère les lignes
-        // --- 1. REPERER LES INDEX ---
-        let indexLibelle = -1;
-        let indexMontant = -1;
-        let indexCote = -1;
-        let indexType = -1;
-        let indexOrder = -1; // Nouvel index pour le tri
-        table.columns.forEach((col, index) => {
-            if (col.roles) {
-                if (col.roles["category"])
-                    indexLibelle = index;
-                if (col.roles["measure"])
-                    indexMontant = index;
-                if (col.roles["position"])
-                    indexCote = index;
-                if (col.roles["rowType"])
-                    indexType = index;
-                if (col.roles["order"])
-                    indexOrder = index; // On repère la colonne Ordre
-            }
-        });
-        // --- 2. TRIER LES LIGNES (CORRECTION DU PROBLEME) ---
-        // Si on a trouvé la colonne ordre, on trie le tableau rows
-        if (indexOrder >= 0) {
-            rows = rows.sort((rowA, rowB) => {
-                const valA = rowA[indexOrder];
-                const valB = rowB[indexOrder];
-                return valA - valB; // Tri croissant (1, 2, 3...)
-            });
+        this.categoricalData = dataView.categorical;
+        const categories = dataView.categorical.categories[0];
+        const values = dataView.categorical.values ? dataView.categorical.values[0] : null;
+        // 1. Récupérer le choix de l'utilisateur (Quelle ligne veut-il modifier ?)
+        // On regarde dans les "objects" globaux (metadata)
+        if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionMenu"]) {
+            this.currentSelectedLabel = dataView.metadata.objects["selectionMenu"]["ligneActive"];
         }
-        // --- 3. CREATION HTML ---
-        const container = document.createElement("div");
-        container.className = "container";
-        const leftDiv = document.createElement("div");
-        leftDiv.className = "column-block";
-        leftDiv.innerHTML = "<div class='header-main'>CHARGES</div>";
-        const leftTable = document.createElement("table");
-        leftDiv.appendChild(leftTable);
-        const rightDiv = document.createElement("div");
-        rightDiv.className = "column-block";
-        rightDiv.innerHTML = "<div class='header-main'>PRODUITS</div>";
-        const rightTable = document.createElement("table");
-        rightDiv.appendChild(rightTable);
-        // --- 4. BOUCLE D'AFFICHAGE ---
-        rows.forEach(row => {
-            let label = (indexLibelle >= 0 && row[indexLibelle]) ? row[indexLibelle].toString() : "";
-            const rawAmount = (indexMontant >= 0 && row[indexMontant] != null) ? row[indexMontant] : null;
-            const position = (indexCote >= 0 && row[indexCote]) ? row[indexCote].toString().toLowerCase() : "g";
-            const type = (indexType >= 0 && row[indexType]) ? row[indexType].toString().toLowerCase() : "normal";
-            if (!label || label.trim() === "") {
-                label = "\u00A0";
+        // Si rien n'est sélectionné, on prend la première ligne par défaut
+        if (!this.currentSelectedLabel && categories.values.length > 0) {
+            this.currentSelectedLabel = categories.values[0].toString();
+        }
+        // 2. Construire les données
+        categories.values.forEach((catValue, index) => {
+            const label = catValue.toString();
+            // Valeurs par défaut
+            let rowSettings = {
+                label: label,
+                amount: values ? values.values[index]?.toString() : "",
+                sortIndex: index,
+                color: "black",
+                bgColor: "transparent",
+                font: "'Segoe UI', sans-serif",
+                fontSize: 12,
+                isBold: false
+            };
+            // Lecture des styles enregistrés
+            if (categories.objects && categories.objects[index]) {
+                const object = categories.objects[index];
+                if (object["styleLigne"]) {
+                    const style = object["styleLigne"];
+                    if (style["ordreTri"] !== undefined)
+                        rowSettings.sortIndex = style["ordreTri"];
+                    if (style["fill"])
+                        rowSettings.color = style["fill"].solid.color;
+                    if (style["background"])
+                        rowSettings.bgColor = style["background"].solid.color;
+                    if (style["fontFamily"])
+                        rowSettings.font = style["fontFamily"];
+                    if (style["fontSize"])
+                        rowSettings.fontSize = style["fontSize"];
+                    if (style["bold"])
+                        rowSettings.isBold = style["bold"];
+                }
             }
-            // Formatage Monétaire
+            this.allRowsData.push(rowSettings);
+        });
+        // 3. Trier et Afficher
+        this.allRowsData.sort((a, b) => a.sortIndex - b.sortIndex);
+        const tbody = document.createElement("tbody");
+        this.allRowsData.forEach(row => {
             let displayAmount = "";
-            // CORRECTION ICI : On vérifie si c'est 0
-            // On convertit en nombre pour être sûr
-            const numericAmount = rawAmount !== null ? Number(rawAmount) : 0;
-            if (rawAmount !== null && rawAmount !== "") {
-                // Si c'est 0 sur une ligne normale, on veut du vide (pas "0 €")
-                if (numericAmount === 0 && type === "normal") {
-                    displayAmount = "";
-                }
-                else {
-                    displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(numericAmount);
-                }
+            if (row.amount && !isNaN(parseFloat(row.amount)) && parseFloat(row.amount) !== 0) {
+                displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(parseFloat(row.amount));
             }
             const tr = document.createElement("tr");
-            // Gestion des styles
-            if (type.includes("header") || type.includes("titre")) {
-                tr.className = "row-header";
-                displayAmount = ""; // Toujours vide pour les titres
-            }
-            else if (type.includes("total")) {
-                tr.className = "row-total";
-            }
-            else {
-                tr.className = "row-normal";
-            }
+            tr.style.color = row.color;
+            tr.style.backgroundColor = row.bgColor;
+            tr.style.fontFamily = row.font;
+            tr.style.fontSize = row.fontSize + "px";
+            if (row.isBold)
+                tr.style.fontWeight = "bold";
             const tdName = document.createElement("td");
-            tdName.innerText = label;
+            tdName.innerText = row.label;
             tr.appendChild(tdName);
             const tdAmount = document.createElement("td");
-            tdAmount.className = "amount-cell";
             tdAmount.innerText = displayAmount;
+            tdAmount.style.textAlign = "right";
             tr.appendChild(tdAmount);
-            if (position.includes("d") || position.includes("right")) {
-                rightTable.appendChild(tr);
-            }
-            else {
-                leftTable.appendChild(tr);
-            }
+            tbody.appendChild(tr);
         });
-        container.appendChild(leftDiv);
-        container.appendChild(rightDiv);
-        this.target.appendChild(container);
+        this.table.appendChild(tbody);
+    }
+    // --- C'EST ICI QUE SE FAIT LE TRI DU MENU ---
+    enumerateObjectInstances(options) {
+        const instances = [];
+        if (!this.categoricalData)
+            return instances;
+        const categories = this.categoricalData.categories[0];
+        // MENU 1 : LA LISTE DÉROULANTE
+        if (options.objectName === "selectionMenu") {
+            // On crée dynamiquement la liste des choix possibles (toutes les lignes du tableau)
+            const rowNames = categories.values.map(v => v.toString());
+            instances.push({
+                objectName: "selectionMenu",
+                selector: null,
+                properties: {
+                    ligneActive: this.currentSelectedLabel
+                },
+                validValues: {
+                    // C'est ça qui crée la liste déroulante dynamique !
+                    ligneActive: rowNames
+                }
+            });
+        }
+        // MENU 2 : LE STYLE (Uniquement pour la ligne sélectionnée au-dessus)
+        if (options.objectName === "styleLigne") {
+            // On cherche l'index de la ligne choisie par l'utilisateur
+            const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
+            if (indexChoisi !== -1) {
+                const selectionId = this.host.createSelectionIdBuilder()
+                    .withCategory(categories, indexChoisi)
+                    .createSelectionId();
+                // On récupère les valeurs actuelles pour pré-remplir
+                let currentOrdre = indexChoisi;
+                let currentBold = false;
+                let currentBg = "";
+                let currentFill = "black";
+                let currentFont = "";
+                let currentSize = 12;
+                if (categories.objects && categories.objects[indexChoisi]) {
+                    const style = categories.objects[indexChoisi]["styleLigne"];
+                    if (style) {
+                        if (style["ordreTri"] !== undefined)
+                            currentOrdre = style["ordreTri"];
+                        if (style["bold"] !== undefined)
+                            currentBold = style["bold"];
+                        if (style["fill"])
+                            currentFill = style["fill"].solid.color;
+                        if (style["background"])
+                            currentBg = style["background"].solid.color;
+                        if (style["fontFamily"])
+                            currentFont = style["fontFamily"];
+                        if (style["fontSize"])
+                            currentSize = style["fontSize"];
+                    }
+                }
+                instances.push({
+                    objectName: "styleLigne",
+                    displayName: "Paramètres de : " + this.currentSelectedLabel,
+                    selector: selectionId.getSelector(),
+                    properties: {
+                        ordreTri: currentOrdre,
+                        bold: currentBold,
+                        fill: { solid: { color: currentFill } },
+                        background: { solid: { color: currentBg } },
+                        fontFamily: currentFont,
+                        fontSize: currentSize
+                    }
+                });
+            }
+        }
+        return instances;
     }
 }
 
