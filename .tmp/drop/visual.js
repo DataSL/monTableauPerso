@@ -15,14 +15,20 @@ class Visual {
     target;
     host;
     table;
+    divContainer; // <--- NOUVEAU CONTRÔLEUR
     allRowsData = [];
     categoricalData;
     currentSelectedLabel = "";
     constructor(options) {
         this.host = options.host;
         this.target = options.element;
+        // 1. Création du conteneur de scroll
+        this.divContainer = document.createElement("div");
+        this.divContainer.className = "scroll-wrapper"; // Lien avec le CSS
+        this.target.appendChild(this.divContainer);
+        // 2. Le tableau est ajouté DANS le conteneur (et plus directement dans target)
         this.table = document.createElement("table");
-        this.target.appendChild(this.table);
+        this.divContainer.appendChild(this.table);
     }
     update(options) {
         this.table.innerHTML = "";
@@ -33,34 +39,28 @@ class Visual {
         this.categoricalData = dataView.categorical;
         const categories = dataView.categorical.categories[0];
         const values = dataView.categorical.values ? dataView.categorical.values[0] : null;
-        // 1. Lire le nom écrit par l'utilisateur
         if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionMenu"]) {
             this.currentSelectedLabel = dataView.metadata.objects["selectionMenu"]["ligneActive"];
         }
         if (!this.currentSelectedLabel && categories.values.length > 0) {
             this.currentSelectedLabel = categories.values[0].toString();
         }
-        // 2. Construire les données
         categories.values.forEach((catValue, index) => {
             const label = catValue.toString();
-            // Paramètres par défaut
             let rowSettings = {
                 label: label,
                 amount: values ? values.values[index]?.toString() : "",
                 sortIndex: index,
                 font: "'Segoe UI', sans-serif",
                 fontSize: 12,
-                // Gauche
                 bgLabel: "transparent",
                 colorLabel: "black",
                 boldLabel: false,
                 italicLabel: false,
-                // Droite
                 bgAmount: "transparent",
                 colorAmount: "black",
                 boldAmount: false
             };
-            // Charger les styles sauvegardés
             if (categories.objects && categories.objects[index]) {
                 const object = categories.objects[index];
                 if (object["styleLigne"]) {
@@ -71,7 +71,6 @@ class Visual {
                         rowSettings.font = style["fontFamily"];
                     if (style["fontSize"])
                         rowSettings.fontSize = style["fontSize"];
-                    // Libellé
                     if (style["bgLabel"])
                         rowSettings.bgLabel = style["bgLabel"].solid.color;
                     if (style["fillLabel"])
@@ -80,7 +79,6 @@ class Visual {
                         rowSettings.boldLabel = style["boldLabel"];
                     if (style["italicLabel"] !== undefined)
                         rowSettings.italicLabel = style["italicLabel"];
-                    // Montant
                     if (style["bgAmount"])
                         rowSettings.bgAmount = style["bgAmount"].solid.color;
                     if (style["fillAmount"])
@@ -91,9 +89,20 @@ class Visual {
             }
             this.allRowsData.push(rowSettings);
         });
-        // 3. Trier
         this.allRowsData.sort((a, b) => a.sortIndex - b.sortIndex);
-        // 4. Afficher
+        // --- AJOUT DE L'EN-TÊTE DU TABLEAU (THEAD) POUR LE STICKY HEADER ---
+        const thead = document.createElement("thead");
+        const trHead = document.createElement("tr");
+        const th1 = document.createElement("th");
+        th1.innerText = categories.source.displayName || "Libellé";
+        trHead.appendChild(th1);
+        const th2 = document.createElement("th");
+        th2.innerText = values ? values.source.displayName : "Montant";
+        th2.style.textAlign = "right";
+        trHead.appendChild(th2);
+        thead.appendChild(trHead);
+        this.table.appendChild(thead);
+        // -------------------------------------------------------------------
         const tbody = document.createElement("tbody");
         this.allRowsData.forEach(row => {
             let displayAmount = "";
@@ -102,26 +111,21 @@ class Visual {
                 displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(rawVal);
             }
             const tr = document.createElement("tr");
-            // Le style global de la police reste sur le TR
             tr.style.fontFamily = row.font;
             tr.style.fontSize = row.fontSize + "px";
-            // --- CELLULE LIBELLÉ ---
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
-            // Style individuel
-            tdName.style.backgroundColor = row.bgLabel; // Fond Gauche
+            tdName.style.backgroundColor = row.bgLabel;
             tdName.style.color = row.colorLabel;
             if (row.boldLabel)
                 tdName.style.fontWeight = "bold";
             if (row.italicLabel)
                 tdName.style.fontStyle = "italic";
             tr.appendChild(tdName);
-            // --- CELLULE MONTANT ---
             const tdAmount = document.createElement("td");
             tdAmount.innerText = displayAmount;
             tdAmount.style.textAlign = "right";
-            // Style individuel
-            tdAmount.style.backgroundColor = row.bgAmount; // Fond Droite
+            tdAmount.style.backgroundColor = row.bgAmount;
             tdAmount.style.color = row.colorAmount;
             if (row.boldAmount)
                 tdAmount.style.fontWeight = "bold";
@@ -135,7 +139,6 @@ class Visual {
         if (!this.categoricalData)
             return instances;
         const categories = this.categoricalData.categories[0];
-        // MENU 1
         if (options.objectName === "selectionMenu") {
             instances.push({
                 objectName: "selectionMenu",
@@ -145,24 +148,20 @@ class Visual {
                 }
             });
         }
-        // MENU 2 (Complet)
         if (options.objectName === "styleLigne") {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
             if (indexChoisi !== -1) {
                 const selectionId = this.host.createSelectionIdBuilder()
                     .withCategory(categories, indexChoisi)
                     .createSelectionId();
-                // Valeurs par défaut
                 let props = {
                     ordreTri: indexChoisi,
                     fontFamily: "",
                     fontSize: 12,
-                    // Gauche
                     bgLabel: { solid: { color: "" } },
                     fillLabel: { solid: { color: "black" } },
                     boldLabel: false,
                     italicLabel: false,
-                    // Droite
                     bgAmount: { solid: { color: "" } },
                     fillAmount: { solid: { color: "black" } },
                     boldAmount: false

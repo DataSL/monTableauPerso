@@ -11,20 +11,16 @@ import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnume
 
 import "../style/visual.less";
 
-// Structure mise à jour avec les 2 fonds
 interface RowData {
     label: string;
     amount: string;
     sortIndex: number;
-    // Style Global
     font: string;
     fontSize: number;
-    // Style Libellé
     bgLabel: string;
     colorLabel: string;
     boldLabel: boolean;
     italicLabel: boolean;
-    // Style Montant
     bgAmount: string;
     colorAmount: string;
     boldAmount: boolean;
@@ -34,6 +30,7 @@ export class Visual implements IVisual {
     private target: HTMLElement;
     private host: IVisualHost;
     private table: HTMLTableElement;
+    private divContainer: HTMLDivElement; // <--- NOUVEAU CONTRÔLEUR
     
     private allRowsData: RowData[] = [];
     private categoricalData: any;
@@ -42,8 +39,15 @@ export class Visual implements IVisual {
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.target = options.element;
+
+        // 1. Création du conteneur de scroll
+        this.divContainer = document.createElement("div");
+        this.divContainer.className = "scroll-wrapper"; // Lien avec le CSS
+        this.target.appendChild(this.divContainer);
+
+        // 2. Le tableau est ajouté DANS le conteneur (et plus directement dans target)
         this.table = document.createElement("table");
-        this.target.appendChild(this.table);
+        this.divContainer.appendChild(this.table);
     }
 
     public update(options: VisualUpdateOptions) {
@@ -57,7 +61,6 @@ export class Visual implements IVisual {
         const categories = dataView.categorical.categories[0];
         const values = dataView.categorical.values ? dataView.categorical.values[0] : null;
 
-        // 1. Lire le nom écrit par l'utilisateur
         if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionMenu"]) {
             this.currentSelectedLabel = dataView.metadata.objects["selectionMenu"]["ligneActive"] as string;
         }
@@ -66,46 +69,35 @@ export class Visual implements IVisual {
             this.currentSelectedLabel = categories.values[0].toString();
         }
 
-        // 2. Construire les données
         categories.values.forEach((catValue, index) => {
             const label = catValue.toString();
 
-            // Paramètres par défaut
             let rowSettings: RowData = {
                 label: label,
                 amount: values ? values.values[index]?.toString() : "",
                 sortIndex: index,
                 font: "'Segoe UI', sans-serif",
                 fontSize: 12,
-                // Gauche
                 bgLabel: "transparent",
                 colorLabel: "black",
                 boldLabel: false,
                 italicLabel: false,
-                // Droite
                 bgAmount: "transparent",
                 colorAmount: "black",
                 boldAmount: false
             };
 
-            // Charger les styles sauvegardés
             if (categories.objects && categories.objects[index]) {
                 const object = categories.objects[index];
                 if (object["styleLigne"]) {
                     const style = object["styleLigne"];
-                    
                     if (style["ordreTri"] !== undefined) rowSettings.sortIndex = style["ordreTri"] as number;
-                    
                     if (style["fontFamily"]) rowSettings.font = style["fontFamily"] as string;
                     if (style["fontSize"]) rowSettings.fontSize = style["fontSize"] as number;
-                    
-                    // Libellé
                     if (style["bgLabel"]) rowSettings.bgLabel = (style["bgLabel"] as any).solid.color;
                     if (style["fillLabel"]) rowSettings.colorLabel = (style["fillLabel"] as any).solid.color;
                     if (style["boldLabel"] !== undefined) rowSettings.boldLabel = style["boldLabel"] as boolean;
                     if (style["italicLabel"] !== undefined) rowSettings.italicLabel = style["italicLabel"] as boolean;
-                    
-                    // Montant
                     if (style["bgAmount"]) rowSettings.bgAmount = (style["bgAmount"] as any).solid.color;
                     if (style["fillAmount"]) rowSettings.colorAmount = (style["fillAmount"] as any).solid.color;
                     if (style["boldAmount"] !== undefined) rowSettings.boldAmount = style["boldAmount"] as boolean;
@@ -114,10 +106,25 @@ export class Visual implements IVisual {
             this.allRowsData.push(rowSettings);
         });
 
-        // 3. Trier
         this.allRowsData.sort((a, b) => a.sortIndex - b.sortIndex);
 
-        // 4. Afficher
+        // --- AJOUT DE L'EN-TÊTE DU TABLEAU (THEAD) POUR LE STICKY HEADER ---
+        const thead = document.createElement("thead");
+        const trHead = document.createElement("tr");
+        
+        const th1 = document.createElement("th");
+        th1.innerText = categories.source.displayName || "Libellé";
+        trHead.appendChild(th1);
+
+        const th2 = document.createElement("th");
+        th2.innerText = values ? values.source.displayName : "Montant";
+        th2.style.textAlign = "right";
+        trHead.appendChild(th2);
+
+        thead.appendChild(trHead);
+        this.table.appendChild(thead);
+        // -------------------------------------------------------------------
+
         const tbody = document.createElement("tbody");
         this.allRowsData.forEach(row => {
             let displayAmount = "";
@@ -127,26 +134,21 @@ export class Visual implements IVisual {
             }
 
             const tr = document.createElement("tr");
-            // Le style global de la police reste sur le TR
             tr.style.fontFamily = row.font;
             tr.style.fontSize = row.fontSize + "px";
 
-            // --- CELLULE LIBELLÉ ---
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
-            // Style individuel
-            tdName.style.backgroundColor = row.bgLabel; // Fond Gauche
+            tdName.style.backgroundColor = row.bgLabel; 
             tdName.style.color = row.colorLabel;
             if (row.boldLabel) tdName.style.fontWeight = "bold";
             if (row.italicLabel) tdName.style.fontStyle = "italic";
             tr.appendChild(tdName);
 
-            // --- CELLULE MONTANT ---
             const tdAmount = document.createElement("td");
             tdAmount.innerText = displayAmount;
             tdAmount.style.textAlign = "right";
-            // Style individuel
-            tdAmount.style.backgroundColor = row.bgAmount; // Fond Droite
+            tdAmount.style.backgroundColor = row.bgAmount; 
             tdAmount.style.color = row.colorAmount; 
             if (row.boldAmount) tdAmount.style.fontWeight = "bold";
             tr.appendChild(tdAmount);
@@ -162,7 +164,6 @@ export class Visual implements IVisual {
         
         const categories = this.categoricalData.categories[0];
 
-        // MENU 1
         if (options.objectName === "selectionMenu") {
             instances.push({
                 objectName: "selectionMenu",
@@ -173,7 +174,6 @@ export class Visual implements IVisual {
             });
         }
 
-        // MENU 2 (Complet)
         if (options.objectName === "styleLigne") {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
 
@@ -182,18 +182,15 @@ export class Visual implements IVisual {
                     .withCategory(categories, indexChoisi)
                     .createSelectionId();
 
-                // Valeurs par défaut
                 let props: any = {
                     ordreTri: indexChoisi,
                     fontFamily: "",
                     fontSize: 12,
-                    // Gauche
-                    bgLabel: { solid: { color: "" } }, // Transparent par défaut
+                    bgLabel: { solid: { color: "" } },
                     fillLabel: { solid: { color: "black" } },
                     boldLabel: false,
                     italicLabel: false,
-                    // Droite
-                    bgAmount: { solid: { color: "" } }, // Transparent par défaut
+                    bgAmount: { solid: { color: "" } },
                     fillAmount: { solid: { color: "black" } },
                     boldAmount: false
                 };
@@ -202,15 +199,12 @@ export class Visual implements IVisual {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
                          if (style["ordreTri"] !== undefined) props.ordreTri = style["ordreTri"];
-                         
                          if (style["fontFamily"]) props.fontFamily = style["fontFamily"];
                          if (style["fontSize"]) props.fontSize = style["fontSize"];
-                         
                          if (style["bgLabel"]) props.bgLabel = style["bgLabel"];
                          if (style["fillLabel"]) props.fillLabel = style["fillLabel"];
                          if (style["boldLabel"] !== undefined) props.boldLabel = style["boldLabel"];
                          if (style["italicLabel"] !== undefined) props.italicLabel = style["italicLabel"];
-                         
                          if (style["bgAmount"]) props.bgAmount = style["bgAmount"];
                          if (style["fillAmount"]) props.fillAmount = style["fillAmount"];
                          if (style["boldAmount"] !== undefined) props.boldAmount = style["boldAmount"];

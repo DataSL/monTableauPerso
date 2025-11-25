@@ -10,6 +10,7 @@ export declare class Visual implements IVisual {
     private target;
     private host;
     private table;
+    private divContainer;
     private allRowsData;
     private categoricalData;
     private currentSelectedLabel;
