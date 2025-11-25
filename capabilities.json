@@ -5,64 +5,136 @@
   ],
   "objects": {
     "titresColonnes": {
-        "displayName": "0. TITRES",
-        "properties": {
-            "titre1": { "displayName": "Titre Col 1", "type": { "text": true } },
-            "titre2": { "displayName": "Titre Col 2", "type": { "text": true } },
-            "titre3": { "displayName": "Titre Col 3", "type": { "text": true } },
-            "titre4": { "displayName": "Titre Col 4", "type": { "text": true } }
-        }
+      "displayName": "0. TITRES COLONNES",
+      "properties": {
+        "titre1": { "displayName": "Titre Col 1", "type": { "text": true } },
+        "titre2": { "displayName": "Titre Col 2", "type": { "text": true } },
+        "titre3": { "displayName": "Titre Col 3", "type": { "text": true } },
+        "titre4": { "displayName": "Titre Col 4", "type": { "text": true } }
+      }
+    },
+    "ligneA": {
+      "displayName": "AJOUT LIGNE A",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
+    },
+    "ligneB": {
+      "displayName": "AJOUT LIGNE B",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
+    },
+    "ligneC": {
+      "displayName": "AJOUT LIGNE C",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
+    },
+    "ligneD": {
+      "displayName": "AJOUT LIGNE D",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
+    },
+    "ligneE": {
+      "displayName": "AJOUT LIGNE E",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
+    },
+    "ligneF": {
+      "displayName": "AJOUT LIGNE F",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
+      }
     },
     "selectionMenu": {
-      "displayName": "1. SÉLECTION",
+      "displayName": "1. SÉLECTION (Excel)",
       "properties": {
-        "ligneActive": {
-          "displayName": "Nom de la ligne",
-          "type": { "text": true } 
-        }
+        "ligneActive": { "displayName": "Nom exact de la ligne", "type": { "text": true } }
       }
     },
     "styleLigne": {
-      "displayName": "2. PERSONNALISATION",
+      "displayName": "2. PERSONNALISATION (Excel)",
       "properties": {
-        "columnIndex": {
-            "displayName": "N° Colonne (1,2,3...)",
-            "type": { "numeric": true }
-        },
-        "ordreTri": {
-          "displayName": "Position (1=Haut)",
-          "type": { "numeric": true }
-        },
-        "marginBottom": {
-            "displayName": "Marge Bas (Espace px)",
-            "type": { "numeric": true }
-        },
-        "marginTop": {
-            "displayName": "Marge HAUT (Espace px)",
-            "description": "Ajoute un espace AVANT cette ligne",
-            "type": { "numeric": true }
-        },
-        "isHidden": {
-            "displayName": "MASQUER CETTE LIGNE",
-            "description": "Cochez pour faire disparaître complètement la ligne",
-            "type": { "bool": true }
-        },
-        "marginColor": {
-            "displayName": "Couleur de la Marge",
-            "description": "Laissez vide pour transparent",
-            "type": { "fill": { "solid": { "color": true } } }
-        },
-        "fontSize": { "displayName": "Taille Texte", "type": { "formatting": { "fontSize": true } } },
+        "columnIndex": { "displayName": "N° Colonne", "type": { "numeric": true } },
+        "ordreTri": { "displayName": "Position", "type": { "numeric": true } },
+        "marginBottom": { "displayName": "Marge Bas", "type": { "numeric": true } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "isHidden": { "displayName": "MASQUER", "type": { "bool": true } },
+        "marginColor": { "displayName": "Couleur Marge", "type": { "fill": { "solid": { "color": true } } } },
+        "customLabel": { "displayName": "Renommer", "type": { "text": true } },
+        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "fontFamily": { "displayName": "Police", "type": { "formatting": { "fontFamily": true } } },
-        
         "bgLabel": { "displayName": "Fond Libellé", "type": { "fill": { "solid": { "color": true } } } },
-        "fillLabel": { "displayName": "Couleur Libellé", "type": { "fill": { "solid": { "color": true } } } },
-        "boldLabel": { "displayName": "Gras (Libellé)", "type": { "bool": true } },
-        "italicLabel": { "displayName": "Italique (Libellé)", "type": { "bool": true } },
-        
+        "fillLabel": { "displayName": "Texte Libellé", "type": { "fill": { "solid": { "color": true } } } },
+        "boldLabel": { "displayName": "Gras (L)", "type": { "bool": true } },
+        "italicLabel": { "displayName": "Italique (L)", "type": { "bool": true } },
         "bgAmount": { "displayName": "Fond Prix", "type": { "fill": { "solid": { "color": true } } } },
-        "fillAmount": { "displayName": "Couleur Prix", "type": { "fill": { "solid": { "color": true } } } },
-        "boldAmount": { "displayName": "Gras (Prix)", "type": { "bool": true } }
+        "fillAmount": { "displayName": "Texte Prix", "type": { "fill": { "solid": { "color": true } } } },
+        "boldAmount": { "displayName": "Gras (P)", "type": { "bool": true } }
       }
     }
   },

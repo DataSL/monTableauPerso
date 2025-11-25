@@ -11,15 +11,12 @@
   min-height: 100%;
   align-items: flex-start;
 }
-/* Cette classe gère la largeur automatique */
 .dynamic-column {
   flex: 1;
-  /* Chaque colonne prendra une part égale */
   display: flex;
   flex-direction: column;
   border-right: 1px solid #ccc;
   min-width: 0;
-  /* Important pour éviter que le contenu ne casse le flex */
 }
 .dynamic-column:last-child {
   border-right: none;

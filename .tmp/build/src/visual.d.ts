@@ -15,6 +15,7 @@ export declare class Visual implements IVisual {
     private categoricalData;
     private currentSelectedLabel;
     private columnTitles;
+    private metadata;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     private renderTableContent;
