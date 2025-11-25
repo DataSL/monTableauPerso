@@ -1,47 +1,50 @@
 {
   "dataRoles": [
     {
-      "displayName": "Catégorie (Nom)",
+      "displayName": "Libellé",
       "name": "category",
       "kind": "Grouping"
     },
     {
-      "displayName": "Valeurs (Chiffres)",
+      "displayName": "Montant",
       "name": "measure",
       "kind": "Measure"
+    },
+    {
+      "displayName": "Côté (G/D)",
+      "name": "position",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "Type (Header/Total)",
+      "name": "rowType",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "Ordre de tri (1,2,3...)",
+      "name": "order",
+      "kind": "Grouping"
     }
   ],
   "objects": {
-    "configLigne": {
-      "displayName": "Configuration Ligne",
+    "configStyle": {
+      "displayName": "Styles Globaux",
       "properties": {
-        "couleurTexte": {
-          "displayName": "Couleur Texte",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "arrierePlan": {
-          "displayName": "Couleur de Fond",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "taillePolice": {
-          "displayName": "Taille Police",
-          "type": { "formatting": { "fontSize": true } }
-        },
-        "police": {
-            "displayName": "Famille de Police",
-            "type": { "formatting": { "fontFamily": true } }
-        }
+        "couleurHeader": { "type": { "fill": { "solid": { "color": true } } } }
       }
     }
   },
   "dataViewMappings": [
     {
-      "categorical": {
-        "categories": {
-          "for": { "in": "category" }
-        },
-        "values": {
-          "select": [ { "bind": { "to": "measure" } } ]
+      "table": {
+        "rows": {
+          "select": [
+            { "for": { "in": "category" } },
+            { "for": { "in": "measure" } },
+            { "for": { "in": "position" } },
+            { "for": { "in": "rowType" } },
+            { "for": { "in": "order" } }
+          ]
         }
       }
     }

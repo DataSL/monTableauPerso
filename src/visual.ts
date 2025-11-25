@@ -4,166 +4,123 @@ import powerbi from "powerbi-visuals-api";
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
-import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
-import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
-import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
 
 import "../style/visual.less";
 
 export class Visual implements IVisual {
     private target: HTMLElement;
-    private table: HTMLTableElement;
-    private host: IVisualHost;
-    private categories: any; 
 
     constructor(options: VisualConstructorOptions) {
-        this.host = options.host;
         this.target = options.element;
-        this.table = document.createElement("table");
-        this.target.appendChild(this.table);
     }
 
     public update(options: VisualUpdateOptions) {
-        this.table.innerHTML = "";
-        
+        this.target.innerHTML = "";
+
         const dataView = options.dataViews[0];
-        if (!dataView || !dataView.categorical || !dataView.categorical.categories) return;
+        if (!dataView || !dataView.table) return;
 
-        const categorical = dataView.categorical;
-        const categoryColumn = categorical.categories[0];
-        const valuesColumns = categorical.values;
-
-        this.categories = categoryColumn;
-
-        // --- En-têtes ---
-        const thead = document.createElement("thead");
-        const headerRow = document.createElement("tr");
+        const table = dataView.table;
+        let rows = table.rows; // On récupère les lignes
         
-        const thCat = document.createElement("th");
-        thCat.innerText = categoryColumn.source.displayName;
-        headerRow.appendChild(thCat);
+        // --- 1. REPERER LES INDEX ---
+        let indexLibelle = -1;
+        let indexMontant = -1;
+        let indexCote = -1;
+        let indexType = -1;
+        let indexOrder = -1; // Nouvel index pour le tri
 
-        if(valuesColumns) {
-            valuesColumns.forEach(valCol => {
-                const th = document.createElement("th");
-                th.innerText = valCol.source.displayName;
-                headerRow.appendChild(th);
+        table.columns.forEach((col, index) => {
+            if (col.roles) {
+                if (col.roles["category"]) indexLibelle = index;
+                if (col.roles["measure"]) indexMontant = index;
+                if (col.roles["position"]) indexCote = index;
+                if (col.roles["rowType"]) indexType = index;
+                if (col.roles["order"]) indexOrder = index; // On repère la colonne Ordre
+            }
+        });
+
+        // --- 2. TRIER LES LIGNES (CORRECTION DU PROBLEME) ---
+        // Si on a trouvé la colonne ordre, on trie le tableau rows
+        if (indexOrder >= 0) {
+            rows = rows.sort((rowA, rowB) => {
+                const valA = rowA[indexOrder] as number;
+                const valB = rowB[indexOrder] as number;
+                return valA - valB; // Tri croissant (1, 2, 3...)
             });
         }
-        thead.appendChild(headerRow);
-        this.table.appendChild(thead);
 
-        // --- Corps du tableau ---
-        const tbody = document.createElement("tbody");
-        
-        categoryColumn.values.forEach((categoryValue, index) => {
+        // --- 3. CREATION HTML ---
+        const container = document.createElement("div");
+        container.className = "container";
+
+        const leftDiv = document.createElement("div");
+        leftDiv.className = "column-block";
+        leftDiv.innerHTML = "<div class='header-main'>CHARGES</div>";
+        const leftTable = document.createElement("table");
+        leftDiv.appendChild(leftTable);
+
+        const rightDiv = document.createElement("div");
+        rightDiv.className = "column-block";
+        rightDiv.innerHTML = "<div class='header-main'>PRODUITS</div>";
+        const rightTable = document.createElement("table");
+        rightDiv.appendChild(rightTable);
+
+        // --- 4. BOUCLE D'AFFICHAGE ---
+        rows.forEach(row => {
+            let label = (indexLibelle >= 0 && row[indexLibelle]) ? row[indexLibelle].toString() : "";
+            const rawAmount = (indexMontant >= 0 && row[indexMontant] != null) ? row[indexMontant] : null;
+            const position = (indexCote >= 0 && row[indexCote]) ? row[indexCote].toString().toLowerCase() : "g";
+            const type = (indexType >= 0 && row[indexType]) ? row[indexType].toString().toLowerCase() : "normal";
+            if (!label || label.trim() === "") {
+                label = "\u00A0"; 
+            }
+            // Formatage Monétaire
+            let displayAmount = "";
+            
+            // CORRECTION ICI : On vérifie si c'est 0
+            // On convertit en nombre pour être sûr
+            const numericAmount = rawAmount !== null ? Number(rawAmount) : 0;
+
+            if (rawAmount !== null && rawAmount !== "") {
+                // Si c'est 0 sur une ligne normale, on veut du vide (pas "0 €")
+                if (numericAmount === 0 && type === "normal") {
+                    displayAmount = ""; 
+                } else {
+                    displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(numericAmount);
+                }
+            }
+
             const tr = document.createElement("tr");
 
-            // 1. Valeurs par défaut
-            let textColor = "black"; 
-            let bgColor = "transparent"; // <--- NOUVEAU (Transparent par défaut)
-            let fontSize = 12;
-            let fontFamily = "'Segoe UI', wf_segoe-ui_normal, helvetica, arial, sans-serif"; // <--- NOUVEAU
-
-            // 2. Lecture des objets (Saved settings)
-            if (categoryColumn.objects && categoryColumn.objects[index]) {
-                const obj = categoryColumn.objects[index];
-                if (obj["configLigne"]) {
-                     const props = obj["configLigne"];
-                     
-                     // Couleur Texte
-                     if (props["couleurTexte"]) 
-                        textColor = (props["couleurTexte"] as any).solid.color;
-                     
-                     // Couleur Fond (<--- NOUVEAU)
-                     if (props["arrierePlan"]) 
-                        bgColor = (props["arrierePlan"] as any).solid.color;
-
-                     // Taille
-                     if (props["taillePolice"])
-                        fontSize = props["taillePolice"] as number;
-
-                     // Police (<--- NOUVEAU)
-                     if (props["police"])
-                        fontFamily = props["police"] as string;
-                }
+            // Gestion des styles
+            if (type.includes("header") || type.includes("titre")) {
+                tr.className = "row-header";
+                displayAmount = ""; // Toujours vide pour les titres
+            } else if (type.includes("total")) {
+                tr.className = "row-total";
+            } else {
+                tr.className = "row-normal";
             }
 
-            // 3. Application du style CSS
-            tr.style.color = textColor;
-            tr.style.backgroundColor = bgColor; // <--- NOUVEAU
-            tr.style.fontSize = fontSize + "px";
-            tr.style.fontFamily = fontFamily;   // <--- NOUVEAU
+            const tdName = document.createElement("td");
+            tdName.innerText = label;
+            tr.appendChild(tdName);
 
-            // Remplissage des cellules
-            const tdCat = document.createElement("td");
-            tdCat.innerText = categoryValue.toString();
-            tr.appendChild(tdCat);
+            const tdAmount = document.createElement("td");
+            tdAmount.className = "amount-cell";
+            tdAmount.innerText = displayAmount;
+            tr.appendChild(tdAmount);
 
-            if(valuesColumns) {
-                valuesColumns.forEach(valCol => {
-                    const td = document.createElement("td");
-                    td.innerText = valCol.values[index] ? valCol.values[index].toString() : "0";
-                    tr.appendChild(td);
-                });
+            if (position.includes("d") || position.includes("right")) {
+                rightTable.appendChild(tr);
+            } else {
+                leftTable.appendChild(tr);
             }
-            tbody.appendChild(tr);
         });
-        this.table.appendChild(tbody);
-    }
 
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
-        const instances: VisualObjectInstance[] = [];
-        if (!this.categories) return instances;
-
-        if (options.objectName === "configLigne") {
-            this.categories.values.forEach((value, index) => {
-                
-                const selectionId = this.host.createSelectionIdBuilder()
-                    .withCategory(this.categories, index)
-                    .createSelectionId();
-
-                // Valeurs actuelles pour le menu
-                let currentTextColor = "black";
-                let currentBgColor = ""; // Vide = transparent
-                let currentSize = 12;
-                let currentFont = "";
-
-                if (this.categories.objects && this.categories.objects[index]) {
-                    const obj = this.categories.objects[index];
-                    if (obj["configLigne"]) {
-                        // Lecture Texte
-                        if (obj["configLigne"]["couleurTexte"]) 
-                            currentTextColor = (obj["configLigne"]["couleurTexte"] as any).solid.color;
-                        
-                        // Lecture Fond (<--- NOUVEAU)
-                        if (obj["configLigne"]["arrierePlan"]) 
-                            currentBgColor = (obj["configLigne"]["arrierePlan"] as any).solid.color;
-
-                        // Lecture Taille
-                        if (obj["configLigne"]["taillePolice"]) 
-                            currentSize = obj["configLigne"]["taillePolice"] as number;
-
-                        // Lecture Police (<--- NOUVEAU)
-                        if (obj["configLigne"]["police"]) 
-                            currentFont = obj["configLigne"]["police"] as string;
-                    }
-                }
-
-                instances.push({
-                    objectName: "configLigne",
-                    displayName: value.toString(),
-                    selector: selectionId.getSelector(),
-                    properties: {
-                        couleurTexte: { solid: { color: currentTextColor } },
-                        arrierePlan: { solid: { color: currentBgColor } }, // <--- NOUVEAU
-                        taillePolice: currentSize,
-                        police: currentFont // <--- NOUVEAU
-                    }
-                });
-            });
-        }
-        return instances;
+        container.appendChild(leftDiv);
+        container.appendChild(rightDiv);
+        this.target.appendChild(container);
     }
 }
