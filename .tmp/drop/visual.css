@@ -3,13 +3,24 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  padding: 5px;
+  /* Ajout d'un petit padding pour ne pas coller aux bords de Power BI */
 }
+/* C'EST ICI QUE ÇA SE PASSE */
 .accounting-container {
   display: flex;
   flex-direction: row;
   width: 100%;
-  min-height: 100%;
   align-items: flex-start;
+  /* --- ARRONDI ET BORDURE --- */
+  border-radius: 8px;
+  /* Coins arrondis */
+  overflow: hidden;
+  /* Coupe ce qui dépasse */
+  /* MODIFICATION ICI : Noir (0,0,0) avec 25% d'opacité (0.25) */
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  /* Optionnel : Ombre très légère pour détacher du fond blanc */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 .dynamic-column {
   flex: 1;
@@ -26,6 +37,7 @@ table {
   border-collapse: collapse;
   font-family: 'Segoe UI', sans-serif;
   table-layout: fixed;
+  /* Important pour que le texte revienne à la ligne */
 }
 thead th {
   position: sticky;
@@ -36,19 +48,24 @@ thead th {
   text-transform: uppercase;
   font-size: 14px;
   text-align: center;
-  padding: 0;
-  height: 40px;
-  line-height: 40px;
-  border-bottom: 3px solid #eea20e;
+  padding: 5px;
+  /* Un peu de padding pour les titres */
+  min-height: 40px;
+  /* border-bottom: 3px solid #eea20e;  <-- J'AI SUPPRIMÉ CETTE LIGNE (Barre Jaune) */
   overflow: hidden;
-  white-space: nowrap;
+  white-space: normal;
+  /* Autorise le titre sur 2 lignes si besoin */
 }
 td {
   padding: 4px 8px;
   border-bottom: 1px solid #eee;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* --- MODIFICATION POUR TEXTE SUR 2 LIGNES --- */
+  white-space: normal;
+  /* Autorise le retour à la ligne */
+  word-wrap: break-word;
+  /* Coupe les mots trop longs proprement */
+  overflow: visible;
+  /* Montre tout le texte */
   vertical-align: middle;
 }
 

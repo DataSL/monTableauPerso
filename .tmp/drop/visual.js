@@ -37,7 +37,6 @@ class Visual {
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
-        // 1. TITRES
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
             const t = this.metadata.objects["titresColonnes"];
             if (t["titre1"])
@@ -49,7 +48,6 @@ class Visual {
             if (t["titre4"])
                 this.columnTitles[3] = t["titre4"];
         }
-        // 2. DONNÉES EXCEL
         let maxColumnIndexUsed = 1;
         if (this.categoricalData) {
             const categories = this.categoricalData.categories[0];
@@ -67,7 +65,7 @@ class Visual {
                     amount: values ? values.values[index]?.toString() : "",
                     columnIndex: 1, sortIndex: index * 10,
                     marginBottom: 0, marginTop: 0, isHidden: false, marginColor: "transparent",
-                    isHeader: false, isVirtual: false,
+                    isHeader: false, isVirtual: false, customAmount: "",
                     font: "'Segoe UI', sans-serif", fontSize: 12,
                     bgLabel: "transparent", colorLabel: "black", boldLabel: false, italicLabel: false,
                     bgAmount: "transparent", colorAmount: "black", boldAmount: false
@@ -78,8 +76,6 @@ class Visual {
                         const style = object["styleLigne"];
                         if (style["columnIndex"])
                             row.columnIndex = style["columnIndex"];
-                        if (row.columnIndex < 1)
-                            row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined)
                             row.sortIndex = style["ordreTri"];
                         if (style["marginBottom"])
@@ -92,6 +88,9 @@ class Visual {
                             row.marginColor = style["marginColor"].solid.color;
                         if (style["customLabel"])
                             row.label = style["customLabel"];
+                        // NOUVEAU : Custom Amount
+                        if (style["customAmount"])
+                            row.customAmount = style["customAmount"];
                         if (style["isHeader"])
                             row.isHeader = style["isHeader"];
                         if (style["fontSize"])
@@ -119,7 +118,6 @@ class Visual {
                 this.allRowsData.push(row);
             });
         }
-        // 3. INJECTION DES LIGNES MANUELLES (A à F)
         const manualRows = ["ligneA", "ligneB", "ligneC", "ligneD", "ligneE", "ligneF"];
         manualRows.forEach((key) => {
             if (this.metadata && this.metadata.objects && this.metadata.objects[key]) {
@@ -132,18 +130,17 @@ class Visual {
                     let bg = s["bgColor"] ? s["bgColor"].solid.color : "transparent";
                     let color = s["textColor"] ? s["textColor"].solid.color : "black";
                     let mt = s["marginTop"] ? s["marginTop"] : 0;
-                    // NOUVEAU : Lecture des styles
-                    let fontSize = s["fontSize"] ? s["fontSize"] : 12;
-                    let isBold = s["bold"] ? s["bold"] : false;
-                    let isItalic = s["italic"] ? s["italic"] : false;
+                    let fs = s["fontSize"] ? s["fontSize"] : 12;
+                    let bo = s["bold"] ? s["bold"] : false;
+                    let it = s["italic"] ? s["italic"] : false;
                     let vRow = {
                         label: txt, amount: "",
                         columnIndex: col, sortIndex: pos,
                         marginBottom: 0, marginTop: mt, isHidden: false, marginColor: "transparent",
-                        isHeader: isHead, isVirtual: true,
-                        font: "'Segoe UI', sans-serif", fontSize: fontSize,
-                        bgLabel: bg, colorLabel: color, boldLabel: isBold, italicLabel: isItalic,
-                        bgAmount: bg, colorAmount: color, boldAmount: isBold // On applique le gras partout
+                        isHeader: isHead, isVirtual: true, customAmount: "",
+                        font: "'Segoe UI', sans-serif", fontSize: fs,
+                        bgLabel: bg, colorLabel: color, boldLabel: bo, italicLabel: it,
+                        bgAmount: bg, colorAmount: color, boldAmount: bo
                     };
                     if (vRow.columnIndex > maxColumnIndexUsed)
                         maxColumnIndexUsed = vRow.columnIndex;
@@ -151,7 +148,6 @@ class Visual {
                 }
             }
         });
-        // 4. RENDU
         for (let i = 1; i <= maxColumnIndexUsed; i++) {
             const colDiv = document.createElement("div");
             colDiv.className = "dynamic-column";
@@ -188,14 +184,23 @@ class Visual {
                 tbody.appendChild(trSp);
             }
             const tr = document.createElement("tr");
+            // --- LOGIQUE MONTANT ---
             let finalAmount = "";
-            let rawVal = parseFloat(row.amount);
-            if (!row.isVirtual && !row.isHeader && row.amount && !isNaN(rawVal) && rawVal !== 0) {
-                finalAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(rawVal);
+            if (row.customAmount && row.customAmount.trim() !== "") {
+                // Priorité au montant manuel
+                finalAmount = row.customAmount;
+            }
+            else {
+                // Calcul automatique
+                let rawVal = parseFloat(row.amount);
+                if (!row.isVirtual && !row.isHeader && row.amount && !isNaN(rawVal) && rawVal !== 0) {
+                    // On passe en style 'decimal' pour garder les espaces mais enlever le €
+                    finalAmount = new Intl.NumberFormat('fr-FR', { style: 'decimal', minimumFractionDigits: 0 }).format(rawVal);
+                }
             }
             tr.style.fontFamily = row.font;
             tr.style.fontSize = row.fontSize + "px";
-            tr.style.height = "30px";
+            // tr.style.height = "30px"; <--- J'AI SUPPRIMÉ CETTE LIGNE POUR LE WRAP
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
             const cellBg = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgLabel;
@@ -256,7 +261,6 @@ class Visual {
                         props.textColor = s["textColor"];
                     if (s["marginTop"])
                         props.marginTop = s["marginTop"];
-                    // NOUVEAU : On remplit les props du menu
                     if (s["fontSize"])
                         props.fontSize = s["fontSize"];
                     if (s["bold"] !== undefined)
@@ -283,7 +287,12 @@ class Visual {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
             if (indexChoisi !== -1) {
                 const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
-                let props = { columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: { solid: { color: "" } }, customLabel: "", isHeader: false, fontSize: 12, bgLabel: { solid: { color: "" } }, fillLabel: { solid: { color: "black" } }, bgAmount: { solid: { color: "" } }, fillAmount: { solid: { color: "black" } }, boldLabel: false, boldAmount: false, italicLabel: false };
+                let props = {
+                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: { solid: { color: "" } },
+                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "",
+                    bgLabel: { solid: { color: "" } }, fillLabel: { solid: { color: "black" } }, italicLabel: false, boldLabel: false,
+                    bgAmount: { solid: { color: "" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false
+                };
                 if (categories.objects && categories.objects[indexChoisi]) {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
@@ -301,6 +310,8 @@ class Visual {
                             props.marginColor = style["marginColor"];
                         if (style["customLabel"])
                             props.customLabel = style["customLabel"];
+                        if (style["customAmount"])
+                            props.customAmount = style["customAmount"];
                         if (style["isHeader"])
                             props.isHeader = style["isHeader"];
                         if (style["fontSize"])

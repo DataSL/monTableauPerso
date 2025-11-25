@@ -125,6 +125,11 @@
         "isHidden": { "displayName": "MASQUER", "type": { "bool": true } },
         "marginColor": { "displayName": "Couleur Marge", "type": { "fill": { "solid": { "color": true } } } },
         "customLabel": { "displayName": "Renommer", "type": { "text": true } },
+        "customAmount": { 
+            "displayName": "Remplacer Montant", 
+            "description": "Ecrivez la valeur exacte à afficher (ex: '450 000 €')",
+            "type": { "text": true } 
+        },
         "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "fontFamily": { "displayName": "Police", "type": { "formatting": { "fontFamily": true } } },
