@@ -1,7 +1,7 @@
 {
   "dataRoles": [
     {
-      "displayName": "Libellé (Lignes)",
+      "displayName": "Libellé",
       "name": "category",
       "kind": "Grouping"
     },
@@ -13,39 +13,56 @@
   ],
   "objects": {
     "selectionMenu": {
-      "displayName": "1. CHOISIR LA LIGNE",
+      "displayName": "1. SÉLECTION",
       "properties": {
         "ligneActive": {
-          "displayName": "Ligne à modifier",
+          "displayName": "Nom de la ligne à modifier",
+          "description": "Ecrivez le nom exact (ex: Total)",
           "type": { "text": true } 
         }
       }
     },
     "styleLigne": {
-      "displayName": "2. STYLE DE LA LIGNE",
+      "displayName": "2. PERSONNALISATION",
       "properties": {
         "ordreTri": {
-          "displayName": "Position (1, 2, 3...)",
+          "displayName": "Position (1=Haut)",
           "type": { "numeric": true }
         },
-        "fill": {
-          "displayName": "Couleur Texte",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
-        "background": {
-          "displayName": "Couleur Fond",
-          "type": { "fill": { "solid": { "color": true } } }
-        },
         "fontFamily": {
-            "displayName": "Police",
+            "displayName": "Police (Globale)",
             "type": { "formatting": { "fontFamily": true } }
         },
         "fontSize": {
-            "displayName": "Taille",
+            "displayName": "Taille (Globale)",
             "type": { "formatting": { "fontSize": true } }
         },
-        "bold": {
-          "displayName": "Gras",
+        "bgLabel": {
+          "displayName": "Couleur FOND (Libellé)",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "fillLabel": {
+          "displayName": "Couleur TEXTE (Libellé)",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "boldLabel": {
+          "displayName": "Gras (Libellé)",
+          "type": { "bool": true }
+        },
+        "italicLabel": {
+            "displayName": "Italique (Libellé)",
+            "type": { "bool": true }
+        },
+        "bgAmount": {
+          "displayName": "Couleur FOND (Prix)",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "fillAmount": {
+          "displayName": "Couleur TEXTE (Prix)",
+          "type": { "fill": { "solid": { "color": true } } }
+        },
+        "boldAmount": {
+          "displayName": "Gras (Prix)",
           "type": { "bool": true }
         }
       }

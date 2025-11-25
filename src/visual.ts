@@ -11,15 +11,23 @@ import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnume
 
 import "../style/visual.less";
 
+// Structure mise à jour avec les 2 fonds
 interface RowData {
     label: string;
     amount: string;
     sortIndex: number;
-    color: string;
-    bgColor: string;
+    // Style Global
     font: string;
     fontSize: number;
-    isBold: boolean;
+    // Style Libellé
+    bgLabel: string;
+    colorLabel: string;
+    boldLabel: boolean;
+    italicLabel: boolean;
+    // Style Montant
+    bgAmount: string;
+    colorAmount: string;
+    boldAmount: boolean;
 }
 
 export class Visual implements IVisual {
@@ -29,8 +37,6 @@ export class Visual implements IVisual {
     
     private allRowsData: RowData[] = [];
     private categoricalData: any;
-    
-    // Pour stocker quel nom est actuellement choisi dans la liste déroulante
     private currentSelectedLabel: string = ""; 
 
     constructor(options: VisualConstructorOptions) {
@@ -51,12 +57,11 @@ export class Visual implements IVisual {
         const categories = dataView.categorical.categories[0];
         const values = dataView.categorical.values ? dataView.categorical.values[0] : null;
 
-        // 1. Récupérer le choix de l'utilisateur (Quelle ligne veut-il modifier ?)
-        // On regarde dans les "objects" globaux (metadata)
+        // 1. Lire le nom écrit par l'utilisateur
         if (dataView.metadata && dataView.metadata.objects && dataView.metadata.objects["selectionMenu"]) {
             this.currentSelectedLabel = dataView.metadata.objects["selectionMenu"]["ligneActive"] as string;
         }
-        // Si rien n'est sélectionné, on prend la première ligne par défaut
+        
         if (!this.currentSelectedLabel && categories.values.length > 0) {
             this.currentSelectedLabel = categories.values[0].toString();
         }
@@ -65,58 +70,85 @@ export class Visual implements IVisual {
         categories.values.forEach((catValue, index) => {
             const label = catValue.toString();
 
-            // Valeurs par défaut
+            // Paramètres par défaut
             let rowSettings: RowData = {
                 label: label,
                 amount: values ? values.values[index]?.toString() : "",
                 sortIndex: index,
-                color: "black",
-                bgColor: "transparent",
                 font: "'Segoe UI', sans-serif",
                 fontSize: 12,
-                isBold: false
+                // Gauche
+                bgLabel: "transparent",
+                colorLabel: "black",
+                boldLabel: false,
+                italicLabel: false,
+                // Droite
+                bgAmount: "transparent",
+                colorAmount: "black",
+                boldAmount: false
             };
 
-            // Lecture des styles enregistrés
+            // Charger les styles sauvegardés
             if (categories.objects && categories.objects[index]) {
                 const object = categories.objects[index];
                 if (object["styleLigne"]) {
                     const style = object["styleLigne"];
+                    
                     if (style["ordreTri"] !== undefined) rowSettings.sortIndex = style["ordreTri"] as number;
-                    if (style["fill"]) rowSettings.color = (style["fill"] as any).solid.color;
-                    if (style["background"]) rowSettings.bgColor = (style["background"] as any).solid.color;
+                    
                     if (style["fontFamily"]) rowSettings.font = style["fontFamily"] as string;
                     if (style["fontSize"]) rowSettings.fontSize = style["fontSize"] as number;
-                    if (style["bold"]) rowSettings.isBold = style["bold"] as boolean;
+                    
+                    // Libellé
+                    if (style["bgLabel"]) rowSettings.bgLabel = (style["bgLabel"] as any).solid.color;
+                    if (style["fillLabel"]) rowSettings.colorLabel = (style["fillLabel"] as any).solid.color;
+                    if (style["boldLabel"] !== undefined) rowSettings.boldLabel = style["boldLabel"] as boolean;
+                    if (style["italicLabel"] !== undefined) rowSettings.italicLabel = style["italicLabel"] as boolean;
+                    
+                    // Montant
+                    if (style["bgAmount"]) rowSettings.bgAmount = (style["bgAmount"] as any).solid.color;
+                    if (style["fillAmount"]) rowSettings.colorAmount = (style["fillAmount"] as any).solid.color;
+                    if (style["boldAmount"] !== undefined) rowSettings.boldAmount = style["boldAmount"] as boolean;
                 }
             }
             this.allRowsData.push(rowSettings);
         });
 
-        // 3. Trier et Afficher
+        // 3. Trier
         this.allRowsData.sort((a, b) => a.sortIndex - b.sortIndex);
 
+        // 4. Afficher
         const tbody = document.createElement("tbody");
         this.allRowsData.forEach(row => {
             let displayAmount = "";
-            if (row.amount && !isNaN(parseFloat(row.amount)) && parseFloat(row.amount) !== 0) {
-                   displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(parseFloat(row.amount));
+            let rawVal = parseFloat(row.amount);
+            if (row.amount && !isNaN(rawVal) && rawVal !== 0) {
+                   displayAmount = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0 }).format(rawVal);
             }
 
             const tr = document.createElement("tr");
-            tr.style.color = row.color;
-            tr.style.backgroundColor = row.bgColor;
+            // Le style global de la police reste sur le TR
             tr.style.fontFamily = row.font;
             tr.style.fontSize = row.fontSize + "px";
-            if (row.isBold) tr.style.fontWeight = "bold";
 
+            // --- CELLULE LIBELLÉ ---
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
+            // Style individuel
+            tdName.style.backgroundColor = row.bgLabel; // Fond Gauche
+            tdName.style.color = row.colorLabel;
+            if (row.boldLabel) tdName.style.fontWeight = "bold";
+            if (row.italicLabel) tdName.style.fontStyle = "italic";
             tr.appendChild(tdName);
 
+            // --- CELLULE MONTANT ---
             const tdAmount = document.createElement("td");
             tdAmount.innerText = displayAmount;
             tdAmount.style.textAlign = "right";
+            // Style individuel
+            tdAmount.style.backgroundColor = row.bgAmount; // Fond Droite
+            tdAmount.style.color = row.colorAmount; 
+            if (row.boldAmount) tdAmount.style.fontWeight = "bold";
             tr.appendChild(tdAmount);
 
             tbody.appendChild(tr);
@@ -124,35 +156,25 @@ export class Visual implements IVisual {
         this.table.appendChild(tbody);
     }
 
-    // --- C'EST ICI QUE SE FAIT LE TRI DU MENU ---
     public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
         const instances: VisualObjectInstance[] = [];
         if (!this.categoricalData) return instances;
         
         const categories = this.categoricalData.categories[0];
 
-        // MENU 1 : LA LISTE DÉROULANTE
+        // MENU 1
         if (options.objectName === "selectionMenu") {
-            // On crée dynamiquement la liste des choix possibles (toutes les lignes du tableau)
-            const rowNames = categories.values.map(v => v.toString());
-            
             instances.push({
                 objectName: "selectionMenu",
-                selector: null, // Selecteur global
+                selector: null, 
                 properties: {
                     ligneActive: this.currentSelectedLabel
-                },
-                validValues: {
-                    // C'est ça qui crée la liste déroulante dynamique !
-                    ligneActive: rowNames 
                 }
             });
         }
 
-        // MENU 2 : LE STYLE (Uniquement pour la ligne sélectionnée au-dessus)
+        // MENU 2 (Complet)
         if (options.objectName === "styleLigne") {
-            
-            // On cherche l'index de la ligne choisie par l'utilisateur
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
 
             if (indexChoisi !== -1) {
@@ -160,38 +182,46 @@ export class Visual implements IVisual {
                     .withCategory(categories, indexChoisi)
                     .createSelectionId();
 
-                // On récupère les valeurs actuelles pour pré-remplir
-                let currentOrdre = indexChoisi;
-                let currentBold = false;
-                let currentBg = ""; 
-                let currentFill = "black";
-                let currentFont = "";
-                let currentSize = 12;
+                // Valeurs par défaut
+                let props: any = {
+                    ordreTri: indexChoisi,
+                    fontFamily: "",
+                    fontSize: 12,
+                    // Gauche
+                    bgLabel: { solid: { color: "" } }, // Transparent par défaut
+                    fillLabel: { solid: { color: "black" } },
+                    boldLabel: false,
+                    italicLabel: false,
+                    // Droite
+                    bgAmount: { solid: { color: "" } }, // Transparent par défaut
+                    fillAmount: { solid: { color: "black" } },
+                    boldAmount: false
+                };
 
                 if (categories.objects && categories.objects[indexChoisi]) {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
-                         if (style["ordreTri"] !== undefined) currentOrdre = style["ordreTri"] as number;
-                         if (style["bold"] !== undefined) currentBold = style["bold"] as boolean;
-                         if (style["fill"]) currentFill = (style["fill"] as any).solid.color;
-                         if (style["background"]) currentBg = (style["background"] as any).solid.color;
-                         if (style["fontFamily"]) currentFont = style["fontFamily"] as string;
-                         if (style["fontSize"]) currentSize = style["fontSize"] as number;
+                         if (style["ordreTri"] !== undefined) props.ordreTri = style["ordreTri"];
+                         
+                         if (style["fontFamily"]) props.fontFamily = style["fontFamily"];
+                         if (style["fontSize"]) props.fontSize = style["fontSize"];
+                         
+                         if (style["bgLabel"]) props.bgLabel = style["bgLabel"];
+                         if (style["fillLabel"]) props.fillLabel = style["fillLabel"];
+                         if (style["boldLabel"] !== undefined) props.boldLabel = style["boldLabel"];
+                         if (style["italicLabel"] !== undefined) props.italicLabel = style["italicLabel"];
+                         
+                         if (style["bgAmount"]) props.bgAmount = style["bgAmount"];
+                         if (style["fillAmount"]) props.fillAmount = style["fillAmount"];
+                         if (style["boldAmount"] !== undefined) props.boldAmount = style["boldAmount"];
                     }
                 }
 
                 instances.push({
                     objectName: "styleLigne",
-                    displayName: "Paramètres de : " + this.currentSelectedLabel, // Titre dynamique
-                    selector: selectionId.getSelector(), // On cible uniquement cette ligne
-                    properties: {
-                        ordreTri: currentOrdre,
-                        bold: currentBold,
-                        fill: { solid: { color: currentFill } },
-                        background: { solid: { color: currentBg } },
-                        fontFamily: currentFont,
-                        fontSize: currentSize
-                    }
+                    displayName: "Personnaliser : " + this.currentSelectedLabel,
+                    selector: selectionId.getSelector(),
+                    properties: props
                 });
             }
         }
