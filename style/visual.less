@@ -10,28 +10,29 @@
     flex-direction: row;
     width: 100%;
     min-height: 100%;
-    align-items: flex-start; /* Important pour l'alignement */
+    align-items: flex-start;
 }
 
-.half-column {
-    flex: 1;
+/* Cette classe gère la largeur automatique */
+.dynamic-column {
+    flex: 1; /* Chaque colonne prendra une part égale */
     display: flex;
     flex-direction: column;
     border-right: 1px solid #ccc;
+    min-width: 0; /* Important pour éviter que le contenu ne casse le flex */
 }
 
-.half-column:last-child {
+.dynamic-column:last-child {
     border-right: none;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse; /* Essentiel pour éviter les espaces fantômes */
+    border-collapse: collapse;
     font-family: 'Segoe UI', sans-serif;
-    table-layout: fixed; /* Stabilise les largeurs */
+    table-layout: fixed;
 }
 
-/* En-têtes figés */
 thead th {
     position: sticky;
     top: 0;
@@ -41,8 +42,8 @@ thead th {
     text-transform: uppercase;
     font-size: 14px;
     text-align: center;
-    padding: 0; /* On gère le padding via line-height */
-    height: 40px; /* HAUTEUR FIGÉE POUR EVITER LE DECALAGE */
+    padding: 0;
+    height: 40px;
     line-height: 40px;
     border-bottom: 3px solid #eea20e;
     overflow: hidden;

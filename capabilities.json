@@ -4,17 +4,13 @@
     { "displayName": "Montant", "name": "measure", "kind": "Measure" }
   ],
   "objects": {
-    "enTetes": {
-        "displayName": "0. TITRES COLONNES",
+    "titresColonnes": {
+        "displayName": "0. TITRES",
         "properties": {
-            "titleLeft": {
-                "displayName": "Titre Gauche",
-                "type": { "text": true }
-            },
-            "titleRight": {
-                "displayName": "Titre Droite",
-                "type": { "text": true }
-            }
+            "titre1": { "displayName": "Titre Col 1", "type": { "text": true } },
+            "titre2": { "displayName": "Titre Col 2", "type": { "text": true } },
+            "titre3": { "displayName": "Titre Col 3", "type": { "text": true } },
+            "titre4": { "displayName": "Titre Col 4", "type": { "text": true } }
         }
     },
     "selectionMenu": {
@@ -22,7 +18,6 @@
       "properties": {
         "ligneActive": {
           "displayName": "Nom de la ligne",
-          "description": "Ecrivez le nom exact",
           "type": { "text": true } 
         }
       }
@@ -30,32 +25,43 @@
     "styleLigne": {
       "displayName": "2. PERSONNALISATION",
       "properties": {
-        "columnPosition": {
-            "displayName": "--- COLONNE (G/D) ---",
-            "type": { 
-                "enumeration": [
-                    { "value": "left", "displayName": "GAUCHE" },
-                    { "value": "right", "displayName": "DROITE" }
-                ] 
-            }
+        "columnIndex": {
+            "displayName": "N° Colonne (1,2,3...)",
+            "type": { "numeric": true }
         },
         "ordreTri": {
           "displayName": "Position (1=Haut)",
           "type": { "numeric": true }
         },
         "marginBottom": {
-            "displayName": "Espace APRES la ligne (px)",
-            "description": "Ajoute un espace vide sous cette ligne (ex: 20)",
+            "displayName": "Marge Bas (Espace px)",
             "type": { "numeric": true }
         },
+        "marginTop": {
+            "displayName": "Marge HAUT (Espace px)",
+            "description": "Ajoute un espace AVANT cette ligne",
+            "type": { "numeric": true }
+        },
+        "isHidden": {
+            "displayName": "MASQUER CETTE LIGNE",
+            "description": "Cochez pour faire disparaître complètement la ligne",
+            "type": { "bool": true }
+        },
+        "marginColor": {
+            "displayName": "Couleur de la Marge",
+            "description": "Laissez vide pour transparent",
+            "type": { "fill": { "solid": { "color": true } } }
+        },
+        "fontSize": { "displayName": "Taille Texte", "type": { "formatting": { "fontSize": true } } },
         "fontFamily": { "displayName": "Police", "type": { "formatting": { "fontFamily": true } } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgLabel": { "displayName": "Couleur FOND (Libellé)", "type": { "fill": { "solid": { "color": true } } } },
-        "fillLabel": { "displayName": "Couleur TEXTE (Libellé)", "type": { "fill": { "solid": { "color": true } } } },
+        
+        "bgLabel": { "displayName": "Fond Libellé", "type": { "fill": { "solid": { "color": true } } } },
+        "fillLabel": { "displayName": "Couleur Libellé", "type": { "fill": { "solid": { "color": true } } } },
         "boldLabel": { "displayName": "Gras (Libellé)", "type": { "bool": true } },
         "italicLabel": { "displayName": "Italique (Libellé)", "type": { "bool": true } },
-        "bgAmount": { "displayName": "Couleur FOND (Prix)", "type": { "fill": { "solid": { "color": true } } } },
-        "fillAmount": { "displayName": "Couleur TEXTE (Prix)", "type": { "fill": { "solid": { "color": true } } } },
+        
+        "bgAmount": { "displayName": "Fond Prix", "type": { "fill": { "solid": { "color": true } } } },
+        "fillAmount": { "displayName": "Couleur Prix", "type": { "fill": { "solid": { "color": true } } } },
         "boldAmount": { "displayName": "Gras (Prix)", "type": { "bool": true } }
       }
     }

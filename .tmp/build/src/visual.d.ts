@@ -11,16 +11,12 @@ export declare class Visual implements IVisual {
     private host;
     private divContainer;
     private flexContainer;
-    private leftColumn;
-    private rightColumn;
-    private tableLeft;
-    private tableRight;
     private allRowsData;
     private categoricalData;
     private currentSelectedLabel;
-    private titleLeft;
-    private titleRight;
+    private columnTitles;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
+    private renderTableContent;
     enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;
 }
