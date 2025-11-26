@@ -63,9 +63,9 @@ td {
     padding: 4px 8px;
     border-bottom: 1px solid #eee;
     
-    /* --- MODIFICATION POUR TEXTE SUR 2 LIGNES --- */
-    white-space: normal; /* Autorise le retour à la ligne */
-    word-wrap: break-word; /* Coupe les mots trop longs proprement */
-    overflow: visible; /* Montre tout le texte */
+    /* --- MODIFICATION POUR TEXTE SUR 1 LIGNE AVEC ... --- */
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
     vertical-align: middle;
 }
