@@ -3,7 +3,7 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 370:
+/***/ 849:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -37,6 +37,7 @@ class Visual {
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
+        // 1. TITRES
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
             const t = this.metadata.objects["titresColonnes"];
             if (t["titre1"])
@@ -48,6 +49,7 @@ class Visual {
             if (t["titre4"])
                 this.columnTitles[3] = t["titre4"];
         }
+        // 2. DONNÉES EXCEL
         let maxColumnIndexUsed = 1;
         if (this.categoricalData) {
             const categories = this.categoricalData.categories[0];
@@ -76,6 +78,8 @@ class Visual {
                         const style = object["styleLigne"];
                         if (style["columnIndex"])
                             row.columnIndex = style["columnIndex"];
+                        if (row.columnIndex < 1)
+                            row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined)
                             row.sortIndex = style["ordreTri"];
                         if (style["marginBottom"])
@@ -88,7 +92,6 @@ class Visual {
                             row.marginColor = style["marginColor"].solid.color;
                         if (style["customLabel"])
                             row.label = style["customLabel"];
-                        // NOUVEAU : Custom Amount
                         if (style["customAmount"])
                             row.customAmount = style["customAmount"];
                         if (style["isHeader"])
@@ -118,6 +121,7 @@ class Visual {
                 this.allRowsData.push(row);
             });
         }
+        // 3. LIGNES MANUELLES
         const manualRows = ["ligneA", "ligneB", "ligneC", "ligneD", "ligneE", "ligneF"];
         manualRows.forEach((key) => {
             if (this.metadata && this.metadata.objects && this.metadata.objects[key]) {
@@ -148,6 +152,7 @@ class Visual {
                 }
             }
         });
+        // 4. RENDU
         for (let i = 1; i <= maxColumnIndexUsed; i++) {
             const colDiv = document.createElement("div");
             colDiv.className = "dynamic-column";
@@ -155,17 +160,124 @@ class Visual {
             colDiv.appendChild(table);
             const colRows = this.allRowsData.filter(r => r.columnIndex === i);
             const colTitle = this.columnTitles[i - 1] || ("COLONNE " + i);
-            this.renderTableContent(table, colTitle, colRows);
+            // On passe l'index de colonne (1-based) pour le renommage
+            this.renderTableContent(table, colTitle, colRows, i);
             this.flexContainer.appendChild(colDiv);
         }
     }
-    renderTableContent(targetTable, title, rows) {
+    renderTableContent(targetTable, title, rows, colIndex) {
         rows.sort((a, b) => a.sortIndex - b.sortIndex);
         const thead = document.createElement("thead");
         const trHead = document.createElement("tr");
         const th = document.createElement("th");
         th.colSpan = 2;
-        th.innerText = title;
+        th.style.position = "relative";
+        th.style.paddingRight = "30px";
+        // Texte du titre (éditable)
+        const titleSpan = document.createElement("span");
+        titleSpan.innerText = title;
+        titleSpan.contentEditable = "false";
+        titleSpan.style.outline = "none";
+        titleSpan.style.display = "inline-block";
+        titleSpan.style.minWidth = "100px";
+        th.appendChild(titleSpan);
+        // Bouton d'édition
+        const editBtn = document.createElement("button");
+        editBtn.innerText = "✏️";
+        editBtn.style.position = "absolute";
+        editBtn.style.right = "5px";
+        editBtn.style.top = "50%";
+        editBtn.style.transform = "translateY(-50%)";
+        editBtn.style.cursor = "pointer";
+        editBtn.style.fontSize = "14px";
+        editBtn.style.opacity = "0.6";
+        editBtn.style.transition = "opacity 0.2s";
+        editBtn.style.border = "none";
+        editBtn.style.background = "transparent";
+        editBtn.style.padding = "2px 6px";
+        editBtn.style.zIndex = "1000";
+        editBtn.title = "Renommer cette colonne";
+        editBtn.type = "button";
+        editBtn.onmouseover = () => { editBtn.style.opacity = "1"; };
+        editBtn.onmouseout = () => { editBtn.style.opacity = "0.6"; };
+        const handleEdit = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            // Activer l'édition
+            titleSpan.contentEditable = "true";
+            titleSpan.style.backgroundColor = "#fff3cd";
+            titleSpan.style.color = "#000000";
+            titleSpan.style.padding = "2px 4px";
+            titleSpan.style.borderRadius = "3px";
+            titleSpan.focus();
+            // Sélectionner tout le texte
+            const range = document.createRange();
+            range.selectNodeContents(titleSpan);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            // Changer l'icône en validation
+            editBtn.innerText = "✓";
+            editBtn.style.color = "green";
+        };
+        const saveEdit = () => {
+            const newTitle = titleSpan.innerText.trim();
+            if (newTitle && newTitle !== title) {
+                this.host.persistProperties({
+                    merge: [{
+                            objectName: "titresColonnes",
+                            selector: null,
+                            properties: {
+                                ["titre" + colIndex]: newTitle
+                            }
+                        }]
+                });
+            }
+            // Désactiver l'édition
+            titleSpan.contentEditable = "false";
+            titleSpan.style.backgroundColor = "transparent";
+            titleSpan.style.color = "";
+            titleSpan.style.padding = "0";
+            editBtn.innerText = "✏️";
+            editBtn.style.color = "";
+        };
+        // Sauvegarder avec Enter
+        titleSpan.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                saveEdit();
+            }
+            if (e.key === 'Escape') {
+                titleSpan.innerText = title;
+                titleSpan.contentEditable = "false";
+                titleSpan.style.backgroundColor = "transparent";
+                titleSpan.style.color = "";
+                titleSpan.style.padding = "0";
+                editBtn.innerText = "✏️";
+                editBtn.style.color = "";
+            }
+        });
+        // Sauvegarder en perdant le focus
+        titleSpan.addEventListener('blur', () => {
+            if (titleSpan.contentEditable === "true") {
+                saveEdit();
+            }
+        });
+        editBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            if (titleSpan.contentEditable === "true") {
+                saveEdit();
+            }
+            else {
+                handleEdit(e);
+            }
+        }, true);
+        editBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); }, true);
+        editBtn.addEventListener('mouseup', (e) => { e.stopPropagation(); }, true);
+        th.appendChild(editBtn);
         trHead.appendChild(th);
         thead.appendChild(trHead);
         targetTable.appendChild(thead);
@@ -184,23 +296,35 @@ class Visual {
                 tbody.appendChild(trSp);
             }
             const tr = document.createElement("tr");
-            // --- LOGIQUE MONTANT ---
+            // CLIC GAUCHE SUR LIGNE (Sélection Auto)
+            if (!row.isVirtual) {
+                tr.onclick = () => {
+                    this.host.persistProperties({
+                        merge: [{
+                                objectName: "selectionMenu",
+                                selector: null,
+                                properties: {
+                                    "ligneActive": row.label
+                                }
+                            }]
+                    });
+                };
+                tr.style.cursor = "pointer";
+                tr.title = "Cliquer pour modifier cette ligne";
+            }
             let finalAmount = "";
             if (row.customAmount && row.customAmount.trim() !== "") {
-                // Priorité au montant manuel
                 finalAmount = row.customAmount;
             }
             else {
-                // Calcul automatique
                 let rawVal = parseFloat(row.amount);
                 if (!row.isVirtual && !row.isHeader && row.amount && !isNaN(rawVal) && rawVal !== 0) {
-                    // On passe en style 'decimal' pour garder les espaces mais enlever le €
+                    // Formatage en mode décimal (sans symbole € automatique)
                     finalAmount = new Intl.NumberFormat('fr-FR', { style: 'decimal', minimumFractionDigits: 0 }).format(rawVal);
                 }
             }
             tr.style.fontFamily = row.font;
             tr.style.fontSize = row.fontSize + "px";
-            // tr.style.height = "30px"; <--- J'AI SUPPRIMÉ CETTE LIGNE POUR LE WRAP
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
             const cellBg = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgLabel;
@@ -236,9 +360,13 @@ class Visual {
     enumerateObjectInstances(options) {
         const instances = [];
         if (options.objectName === "titresColonnes") {
-            instances.push({ objectName: "titresColonnes", selector: null, properties: {
+            instances.push({
+                objectName: "titresColonnes",
+                selector: null,
+                properties: {
                     titre1: this.columnTitles[0], titre2: this.columnTitles[1], titre3: this.columnTitles[2], titre4: this.columnTitles[3]
-                } });
+                }
+            });
         }
         const addManualMenu = (key) => {
             if (options.objectName === key) {
@@ -268,7 +396,11 @@ class Visual {
                     if (s["italic"] !== undefined)
                         props.italic = s["italic"];
                 }
-                instances.push({ objectName: key, selector: null, properties: props });
+                instances.push({
+                    objectName: key,
+                    selector: null,
+                    properties: props
+                });
             }
         };
         addManualMenu("ligneA");
@@ -281,7 +413,11 @@ class Visual {
             return instances;
         const categories = this.categoricalData.categories[0];
         if (options.objectName === "selectionMenu") {
-            instances.push({ objectName: "selectionMenu", selector: null, properties: { ligneActive: this.currentSelectedLabel } });
+            instances.push({
+                objectName: "selectionMenu",
+                selector: null,
+                properties: { ligneActive: this.currentSelectedLabel }
+            });
         }
         if (options.objectName === "styleLigne") {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
@@ -407,7 +543,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (visualPlugin)
 /* harmony export */ });
-/* harmony import */ var _src_visual__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(370);
+/* harmony import */ var _src_visual__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(849);
 
 var powerbiKey = "powerbi";
 var powerbi = window[powerbiKey];
