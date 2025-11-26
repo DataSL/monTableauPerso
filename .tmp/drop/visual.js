@@ -21,7 +21,9 @@ class Visual {
     currentSelectedLabel = "";
     columnTitles = [];
     metadata;
+    toolbar;
     // Stocker les changements en attente pour éviter le scintillement
+    // On utilise 'any' pour permettre de stocker n'importe quelle propriété de RowData
     pendingChanges = new Map();
     constructor(options) {
         this.host = options.host;
@@ -32,6 +34,18 @@ class Visual {
         this.flexContainer = document.createElement("div");
         this.flexContainer.className = "accounting-container";
         this.divContainer.appendChild(this.flexContainer);
+        // Initialiser la toolbar (cachée par défaut)
+        this.toolbar = document.createElement("div");
+        this.toolbar.className = "floating-toolbar";
+        this.toolbar.style.display = "none";
+        document.body.appendChild(this.toolbar); // Append to body to float over everything
+        // Fermer la toolbar si on clique ailleurs
+        document.addEventListener("mousedown", (e) => {
+            if (this.toolbar.style.display !== "none" &&
+                !this.toolbar.contains(e.target)) {
+                this.toolbar.style.display = "none";
+            }
+        });
     }
     update(options) {
         this.flexContainer.innerHTML = "";
@@ -122,17 +136,33 @@ class Visual {
                 // Appliquer les changements en attente (optimiste)
                 if (this.pendingChanges.has(originalName)) {
                     const pending = this.pendingChanges.get(originalName);
-                    // Si le changement est récent (< 30 secondes) ou si les données Power BI n'ont pas encore rattrapé
+                    // Si le changement est récent (< 30 secondes)
                     if (Date.now() - pending.timestamp < 30000) {
-                        // Vérifier si Power BI a rattrapé
-                        if (row.columnIndex === pending.columnIndex && Math.abs(row.sortIndex - pending.sortIndex) < 0.01) {
-                            // Power BI est à jour, on peut supprimer le pending
+                        let allMatched = true;
+                        // Parcourir toutes les propriétés en attente (sauf timestamp)
+                        Object.keys(pending).forEach(key => {
+                            if (key === "timestamp")
+                                return;
+                            // Comparaison souple pour gérer les types (ex: number vs string)
+                            // Pour les nombres flottants (sortIndex), on utilise une tolérance
+                            let match = false;
+                            if (typeof pending[key] === 'number' && typeof row[key] === 'number') {
+                                match = Math.abs(pending[key] - row[key]) < 0.01;
+                            }
+                            else {
+                                match = pending[key] === row[key];
+                            }
+                            if (match) {
+                                // Power BI a rattrapé cette propriété
+                            }
+                            else {
+                                // Power BI n'est pas encore à jour, on force la valeur locale
+                                row[key] = pending[key];
+                                allMatched = false;
+                            }
+                        });
+                        if (allMatched) {
                             this.pendingChanges.delete(originalName);
-                        }
-                        else {
-                            // Power BI n'est pas encore à jour, on force la valeur locale
-                            row.columnIndex = pending.columnIndex;
-                            row.sortIndex = pending.sortIndex;
                         }
                     }
                     else {
@@ -539,11 +569,13 @@ class Visual {
                     }
                 }
             };
-            // CLIC GAUCHE SUR LIGNE (Sélection Auto)
+            // CLIC GAUCHE SUR LIGNE (Sélection Auto + Toolbar)
             if (!row.isVirtual) {
                 tr.onclick = (e) => {
                     // Ne pas déclencher si on est en train de draguer
                     if (tr.draggable && e.detail === 1) {
+                        e.stopPropagation(); // Empêcher la fermeture immédiate
+                        // 1. Sélectionner la ligne pour Power BI
                         this.host.persistProperties({
                             merge: [{
                                     objectName: "selectionMenu",
@@ -553,6 +585,8 @@ class Visual {
                                     }
                                 }]
                         });
+                        // 2. Afficher la toolbar
+                        this.showToolbar(row, tr, e.clientX, e.clientY, categories);
                     }
                 };
                 tr.title = "Cliquer pour modifier | Glisser pour déplacer";
@@ -729,6 +763,237 @@ class Visual {
         };
         tbody.appendChild(dropZoneTr);
         targetTable.appendChild(tbody);
+    }
+    showToolbar(row, tr, x, y, categories) {
+        console.log("🟢 showToolbar called for:", row.originalName);
+        if (!categories) {
+            console.error("🔴 Categories is null");
+            return;
+        }
+        this.toolbar.innerHTML = "";
+        this.toolbar.style.display = "flex";
+        // Stop propagation on the toolbar itself
+        this.toolbar.onmousedown = (e) => e.stopPropagation();
+        this.toolbar.onclick = (e) => e.stopPropagation();
+        // Positionner la toolbar
+        // S'assurer qu'elle ne sort pas de l'écran
+        const toolbarWidth = 300; // Approx
+        let left = x - toolbarWidth / 2;
+        if (left < 10)
+            left = 10;
+        if (left + toolbarWidth > window.innerWidth)
+            left = window.innerWidth - toolbarWidth - 10;
+        let top = y - 50;
+        if (top < 10)
+            top = y + 20; // Afficher en dessous si trop haut
+        this.toolbar.style.left = left + "px";
+        this.toolbar.style.top = top + "px";
+        // Créer le SelectionId pour cette ligne
+        const index = categories.values.findIndex(v => v.toString() === row.originalName);
+        console.log("🟢 Index found:", index);
+        if (index === -1) {
+            console.error("🔴 Index not found for", row.originalName);
+            return;
+        }
+        const selectionId = this.host.createSelectionIdBuilder()
+            .withCategory(categories, index)
+            .createSelectionId();
+        // Helper pour mettre à jour pendingChanges
+        const updatePending = (props) => {
+            const current = this.pendingChanges.get(row.originalName) || { timestamp: Date.now() };
+            const updated = { ...current, ...props, timestamp: Date.now() };
+            this.pendingChanges.set(row.originalName, updated);
+        };
+        // Helper pour persister une propriété
+        const updateProp = (propName, value) => {
+            console.log(`🟢 Persisting ${propName}:`, value);
+            this.host.persistProperties({
+                merge: [{
+                        objectName: "styleLigne",
+                        selector: selectionId.getSelector(),
+                        properties: {
+                            [propName]: value
+                        }
+                    }]
+            });
+        };
+        // --- BOUTONS ---
+        // GRAS (B)
+        const btnBold = document.createElement("button");
+        btnBold.innerHTML = "<b>B</b>";
+        btnBold.title = "Gras";
+        if (row.boldLabel)
+            btnBold.className = "active";
+        btnBold.onclick = (e) => {
+            e.stopPropagation();
+            const newVal = !row.boldLabel;
+            btnBold.className = newVal ? "active" : "";
+            // Optimistic Update
+            row.boldLabel = newVal;
+            row.boldAmount = newVal;
+            const weight = newVal ? "bold" : "normal";
+            if (tr.cells[0])
+                tr.cells[0].style.fontWeight = weight;
+            if (tr.cells[1])
+                tr.cells[1].style.fontWeight = weight;
+            updatePending({ boldLabel: newVal, boldAmount: newVal });
+            // Appliquer à Label ET Amount pour cohérence
+            this.host.persistProperties({
+                merge: [{
+                        objectName: "styleLigne",
+                        selector: selectionId.getSelector(),
+                        properties: {
+                            boldLabel: newVal,
+                            boldAmount: newVal
+                        }
+                    }]
+            });
+        };
+        this.toolbar.appendChild(btnBold);
+        // ITALIQUE (I)
+        const btnItalic = document.createElement("button");
+        btnItalic.innerHTML = "<i>I</i>";
+        btnItalic.title = "Italique";
+        if (row.italicLabel)
+            btnItalic.className = "active";
+        btnItalic.onclick = (e) => {
+            e.stopPropagation();
+            const newVal = !row.italicLabel;
+            btnItalic.className = newVal ? "active" : "";
+            // Optimistic Update
+            row.italicLabel = newVal;
+            const style = newVal ? "italic" : "normal";
+            if (tr.cells[0])
+                tr.cells[0].style.fontStyle = style;
+            updatePending({ italicLabel: newVal });
+            updateProp("italicLabel", newVal);
+        };
+        this.toolbar.appendChild(btnItalic);
+        // SEPARATEUR
+        const sep1 = document.createElement("div");
+        sep1.className = "separator";
+        this.toolbar.appendChild(sep1);
+        // TAILLE POLICE (-)
+        const btnMinus = document.createElement("button");
+        btnMinus.innerText = "A-";
+        btnMinus.title = "Diminuer la police";
+        btnMinus.onclick = (e) => {
+            e.stopPropagation();
+            let s = row.fontSize || 12;
+            if (s > 8) {
+                s = s - 1;
+                // Optimistic Update
+                row.fontSize = s;
+                tr.style.fontSize = s + "px";
+                updatePending({ fontSize: s });
+                updateProp("fontSize", s);
+            }
+        };
+        this.toolbar.appendChild(btnMinus);
+        // TAILLE POLICE (+)
+        const btnPlus = document.createElement("button");
+        btnPlus.innerText = "A+";
+        btnPlus.title = "Augmenter la police";
+        btnPlus.onclick = (e) => {
+            e.stopPropagation();
+            let s = row.fontSize || 12;
+            if (s < 24) {
+                s = s + 1;
+                // Optimistic Update
+                row.fontSize = s;
+                tr.style.fontSize = s + "px";
+                updatePending({ fontSize: s });
+                updateProp("fontSize", s);
+            }
+        };
+        this.toolbar.appendChild(btnPlus);
+        // SEPARATEUR
+        const sep2 = document.createElement("div");
+        sep2.className = "separator";
+        this.toolbar.appendChild(sep2);
+        // COULEUR TEXTE
+        const divColor = document.createElement("div");
+        divColor.className = "color-picker-wrapper";
+        const lblColor = document.createElement("label");
+        lblColor.innerText = "T";
+        lblColor.style.fontWeight = "bold";
+        const inpColor = document.createElement("input");
+        inpColor.type = "color";
+        inpColor.title = "Couleur du texte";
+        // Convertir couleur Power BI (si hex) ou nom
+        // Note: row.colorLabel peut être un objet {solid:{color:...}} ou string
+        // Ici on suppose que c'est déjà string grâce au parsing dans update()
+        inpColor.value = (row.colorLabel && row.colorLabel.startsWith("#")) ? row.colorLabel : "#000000";
+        inpColor.onclick = (e) => e.stopPropagation();
+        inpColor.onchange = (e) => {
+            e.stopPropagation();
+            const color = inpColor.value;
+            // Optimistic Update
+            row.colorLabel = color;
+            row.colorAmount = color;
+            if (tr.cells[0])
+                tr.cells[0].style.color = color;
+            if (tr.cells[1])
+                tr.cells[1].style.color = color;
+            updatePending({ colorLabel: color, colorAmount: color });
+            this.host.persistProperties({
+                merge: [{
+                        objectName: "styleLigne",
+                        selector: selectionId.getSelector(),
+                        properties: {
+                            fillLabel: { solid: { color: color } },
+                            fillAmount: { solid: { color: color } }
+                        }
+                    }]
+            });
+        };
+        divColor.appendChild(lblColor);
+        divColor.appendChild(inpColor);
+        this.toolbar.appendChild(divColor);
+        // COULEUR FOND
+        const divBg = document.createElement("div");
+        divBg.className = "color-picker-wrapper";
+        const lblBg = document.createElement("label");
+        lblBg.innerText = "🎨";
+        const inpBg = document.createElement("input");
+        inpBg.type = "color";
+        inpBg.title = "Couleur de fond";
+        inpBg.value = (row.bgLabel && row.bgLabel.startsWith("#")) ? row.bgLabel : "#ffffff";
+        inpBg.onclick = (e) => e.stopPropagation();
+        inpBg.onchange = (e) => {
+            e.stopPropagation();
+            const color = inpBg.value;
+            // Optimistic Update
+            row.bgLabel = color;
+            row.bgAmount = color;
+            if (tr.cells[0])
+                tr.cells[0].style.backgroundColor = color;
+            if (tr.cells[1])
+                tr.cells[1].style.backgroundColor = color;
+            updatePending({ bgLabel: color, bgAmount: color });
+            this.host.persistProperties({
+                merge: [{
+                        objectName: "styleLigne",
+                        selector: selectionId.getSelector(),
+                        properties: {
+                            bgLabel: { solid: { color: color } },
+                            bgAmount: { solid: { color: color } }
+                        }
+                    }]
+            });
+        };
+        divBg.appendChild(lblBg);
+        divBg.appendChild(inpBg);
+        this.toolbar.appendChild(divBg);
+        // BOUTON FERMER
+        const btnClose = document.createElement("button");
+        btnClose.className = "close-btn";
+        btnClose.innerHTML = "✖";
+        btnClose.onclick = (e) => {
+            e.stopPropagation();
+            this.toolbar.style.display = "none";
+        };
+        this.toolbar.appendChild(btnClose);
     }
     enumerateObjectInstances(options) {
         const instances = [];

@@ -16,9 +16,11 @@ export declare class Visual implements IVisual {
     private currentSelectedLabel;
     private columnTitles;
     private metadata;
+    private toolbar;
     private pendingChanges;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     private renderTableContent;
+    private showToolbar;
     enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;
 }
