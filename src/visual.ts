@@ -42,7 +42,7 @@ export class Visual implements IVisual {
     private allRowsData: RowData[] = [];
     private categoricalData: any;
     private currentSelectedLabel: string = ""; 
-    private columnTitles: string[] = ["COLONNE 1", "COLONNE 2", "COLONNE 3", "COLONNE 4"];
+    private columnTitles: string[] = [];
     private metadata: any;
 
     constructor(options: VisualConstructorOptions) {
@@ -64,13 +64,17 @@ export class Visual implements IVisual {
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
 
-        // 1. TITRES
+        // 1. TITRES - Initialisation dynamique
+        this.columnTitles = [];
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
             const t = this.metadata.objects["titresColonnes"];
-            if (t["titre1"]) this.columnTitles[0] = t["titre1"] as string;
-            if (t["titre2"]) this.columnTitles[1] = t["titre2"] as string;
-            if (t["titre3"]) this.columnTitles[2] = t["titre3"] as string;
-            if (t["titre4"]) this.columnTitles[3] = t["titre4"] as string;
+            // Charger tous les titres disponibles
+            for (let i = 1; i <= 20; i++) {
+                const key = "titre" + i;
+                if (t[key]) {
+                    this.columnTitles[i-1] = t[key] as string;
+                }
+            }
         }
 
         // 2. DONNÉES EXCEL
@@ -166,7 +170,10 @@ export class Visual implements IVisual {
         });
 
         // 4. RENDU
-        for (let i = 1; i <= maxColumnIndexUsed; i++) {
+        // Déterminer le nombre maximum de colonnes à afficher (max entre données et titres)
+        let maxColumnsToShow = Math.max(maxColumnIndexUsed, this.columnTitles.length);
+        
+        for (let i = 1; i <= maxColumnsToShow; i++) {
             const colDiv = document.createElement("div");
             colDiv.className = "dynamic-column"; 
             const table = document.createElement("table");
@@ -178,6 +185,70 @@ export class Visual implements IVisual {
             this.renderTableContent(table, colTitle, colRows, i);
             this.flexContainer.appendChild(colDiv);
         }
+        
+        // Bouton "Ajouter une colonne"
+        const addColumnDiv = document.createElement("button");
+        addColumnDiv.type = "button";
+        addColumnDiv.className = "add-column-button";
+        addColumnDiv.style.display = "flex";
+        addColumnDiv.style.alignItems = "center";
+        addColumnDiv.style.justifyContent = "center";
+        addColumnDiv.style.minWidth = "40px";
+        addColumnDiv.style.cursor = "pointer";
+        addColumnDiv.style.opacity = "0.5";
+        addColumnDiv.style.transition = "opacity 0.2s";
+        addColumnDiv.style.fontSize = "18px";
+        addColumnDiv.style.color = "#666";
+        addColumnDiv.style.border = "2px dashed #ccc";
+        addColumnDiv.style.borderRadius = "6px";
+        addColumnDiv.style.margin = "10px";
+        addColumnDiv.style.padding = "12px";
+        addColumnDiv.style.background = "transparent";
+        addColumnDiv.style.zIndex = "1000";
+        addColumnDiv.innerHTML = "➕";
+        addColumnDiv.title = "Ajouter une nouvelle colonne";
+        
+        addColumnDiv.onmouseover = () => { 
+            addColumnDiv.style.opacity = "1"; 
+            addColumnDiv.style.borderColor = "#999";
+        };
+        addColumnDiv.onmouseout = () => { 
+            addColumnDiv.style.opacity = "0.5"; 
+            addColumnDiv.style.borderColor = "#ccc";
+        };
+        
+        const handleAddColumn = (e: Event) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            const newIndex = this.columnTitles.length + 1;
+            const newTitle = "COLONNE " + newIndex;
+            
+            console.log("Ajout colonne:", newIndex, newTitle); // Debug
+            
+            this.host.persistProperties({
+                merge: [{
+                    objectName: "titresColonnes",
+                    selector: null,
+                    properties: {
+                        ["titre" + newIndex]: newTitle
+                    }
+                }]
+            });
+        };
+        
+        addColumnDiv.addEventListener('click', handleAddColumn, true);
+        addColumnDiv.addEventListener('mousedown', (e) => { 
+            e.preventDefault();
+            e.stopPropagation(); 
+        }, true);
+        addColumnDiv.addEventListener('mouseup', (e) => { 
+            e.preventDefault();
+            e.stopPropagation(); 
+        }, true);
+        
+        this.flexContainer.appendChild(addColumnDiv);
     }
 
     private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number) {
@@ -385,12 +456,18 @@ export class Visual implements IVisual {
         const instances: VisualObjectInstance[] = [];
 
         if (options.objectName === "titresColonnes") {
+            const props: any = {};
+            // Retourner tous les titres existants
+            for (let i = 1; i <= 20; i++) {
+                const titre = this.columnTitles[i-1];
+                if (titre) {
+                    props["titre" + i] = titre;
+                }
+            }
             instances.push({ 
                 objectName: "titresColonnes", 
-                selector: null, // <--- AJOUTÉ ICI
-                properties: { 
-                    titre1: this.columnTitles[0], titre2: this.columnTitles[1], titre3: this.columnTitles[2], titre4: this.columnTitles[3] 
-                }
+                selector: null,
+                properties: props
             });
         }
 

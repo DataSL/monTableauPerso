@@ -10,7 +10,23 @@
         "titre1": { "displayName": "Titre Col 1", "type": { "text": true } },
         "titre2": { "displayName": "Titre Col 2", "type": { "text": true } },
         "titre3": { "displayName": "Titre Col 3", "type": { "text": true } },
-        "titre4": { "displayName": "Titre Col 4", "type": { "text": true } }
+        "titre4": { "displayName": "Titre Col 4", "type": { "text": true } },
+        "titre5": { "displayName": "Titre Col 5", "type": { "text": true } },
+        "titre6": { "displayName": "Titre Col 6", "type": { "text": true } },
+        "titre7": { "displayName": "Titre Col 7", "type": { "text": true } },
+        "titre8": { "displayName": "Titre Col 8", "type": { "text": true } },
+        "titre9": { "displayName": "Titre Col 9", "type": { "text": true } },
+        "titre10": { "displayName": "Titre Col 10", "type": { "text": true } },
+        "titre11": { "displayName": "Titre Col 11", "type": { "text": true } },
+        "titre12": { "displayName": "Titre Col 12", "type": { "text": true } },
+        "titre13": { "displayName": "Titre Col 13", "type": { "text": true } },
+        "titre14": { "displayName": "Titre Col 14", "type": { "text": true } },
+        "titre15": { "displayName": "Titre Col 15", "type": { "text": true } },
+        "titre16": { "displayName": "Titre Col 16", "type": { "text": true } },
+        "titre17": { "displayName": "Titre Col 17", "type": { "text": true } },
+        "titre18": { "displayName": "Titre Col 18", "type": { "text": true } },
+        "titre19": { "displayName": "Titre Col 19", "type": { "text": true } },
+        "titre20": { "displayName": "Titre Col 20", "type": { "text": true } }
       }
     },
     "ligneA": {
