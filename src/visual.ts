@@ -32,6 +32,7 @@ interface RowData {
     
     // Ajout customAmount pour être complet
     customAmount: string;
+    customLabel?: string;
 }
 
 export class Visual implements IVisual {
@@ -456,37 +457,36 @@ export class Visual implements IVisual {
 
             const tr = document.createElement("tr");
             
-            // Drag & Drop pour déplacer les lignes
-            if (!row.isVirtual) {
-                tr.draggable = true;
-                tr.style.cursor = "move";
-                
-                tr.ondragstart = (e: DragEvent) => {
-                    e.stopPropagation();
-                    if (e.dataTransfer) {
-                        e.dataTransfer.effectAllowed = "move";
-                        
-                        // Utiliser les données actuelles de allRowsData (avec mises à jour locales)
-                        const currentRow = this.allRowsData.find(r => r.originalName === row.originalName);
-                        const dragData = {
-                            label: row.label,
-                            originalName: row.originalName,
-                            columnIndex: currentRow ? currentRow.columnIndex : row.columnIndex,
-                            sortIndex: currentRow ? currentRow.sortIndex : row.sortIndex
-                        };
-                        console.log("🔵 DRAG START:", dragData);
-                        e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
-                        tr.style.opacity = "0.5";
-                    }
-                };
-                
-                tr.ondragend = (e: DragEvent) => {
-                    console.log("🔵 DRAG END");
-                    tr.style.opacity = "1";
-                };
-            }
+            // Drag & Drop pour déplacer les lignes (Data et Virtuelles)
+            tr.draggable = true;
+            tr.style.cursor = "move";
+            
+            tr.ondragstart = (e: DragEvent) => {
+                e.stopPropagation();
+                if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = "move";
+                    
+                    // Utiliser les données actuelles de allRowsData (avec mises à jour locales)
+                    const currentRow = this.allRowsData.find(r => r.originalName === row.originalName);
+                    const dragData = {
+                        label: row.label,
+                        originalName: row.originalName,
+                        columnIndex: currentRow ? currentRow.columnIndex : row.columnIndex,
+                        sortIndex: currentRow ? currentRow.sortIndex : row.sortIndex,
+                        isVirtual: row.isVirtual
+                    };
+                    console.log("🔵 DRAG START:", dragData);
+                    e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+                    tr.style.opacity = "0.5";
+                }
+            };
+            
+            tr.ondragend = (e: DragEvent) => {
+                console.log("🔵 DRAG END");
+                tr.style.opacity = "1";
+            };
 
-            // Autoriser le drop sur TOUTES les lignes (même virtuelles)
+            // Autoriser le drop sur TOUTES les lignes
             tr.ondragover = (e: DragEvent) => {
                 e.preventDefault();
                 if (e.dataTransfer) {
@@ -506,88 +506,52 @@ export class Visual implements IVisual {
                 
                 console.log("🟢 DROP EVENT - Target:", row.label, "Col:", colIndex, "SortIndex:", row.sortIndex);
                 
-                if (e.dataTransfer && categories) {
+                if (e.dataTransfer) {
                     const dataStr = e.dataTransfer.getData("text/plain");
                     const data = JSON.parse(dataStr);
                     const draggedLabel = data.label;
                     const draggedOriginalName = data.originalName || data.label;
+                    const isVirtual = data.isVirtual;
                     const targetLabel = row.label;
                     const targetOriginalName = row.originalName;
                     
                     if (draggedOriginalName !== targetOriginalName) {
-                        const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
                         
-                        if (draggedIndex !== -1) {
-                            const selectionId = this.host.createSelectionIdBuilder()
-                                .withCategory(categories, draggedIndex)
-                                .createSelectionId();
-                            
-                            // Récupérer les props existantes
-                            let existingProps: any = {
-                                marginBottom: 0, marginTop: 0, isHidden: false, 
-                                marginColor: {solid:{color:"transparent"}},
-                                customLabel: "", customAmount: "", isHeader: false, 
-                                fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                                bgLabel: {solid:{color:"transparent"}}, 
-                                fillLabel: {solid:{color:"black"}}, 
-                                italicLabel: false, boldLabel: false,
-                                bgAmount: {solid:{color:"transparent"}}, 
-                                fillAmount: {solid:{color:"black"}}, 
-                                boldAmount: false
-                            };
-                            
-                            if (categories.objects && categories.objects[draggedIndex]) {
-                                const style = categories.objects[draggedIndex]["styleLigne"];
-                                if (style) {
-                                    Object.keys(style).forEach(key => {
-                                        if (key !== "columnIndex" && key !== "ordreTri") {
-                                            existingProps[key] = style[key];
-                                        }
-                                    });
-                                }
-                            }
-                            
-                            // CALCUL DE LA NOUVELLE POSITION (INSERTION AVANT)
-                            // Trouver l'index de la ligne cible dans le tableau trié de cette colonne
-                            // rows est déjà trié par sortIndex dans renderTableContent
-                            const targetRowIndex = rows.findIndex(r => r.originalName === row.originalName);
-                            
-                            let prevSortIndex = -1000;
-                            if (targetRowIndex > 0) {
-                                prevSortIndex = rows[targetRowIndex - 1].sortIndex;
-                            } else {
-                                // Si c'est la première ligne, on prend une valeur inférieure
-                                prevSortIndex = row.sortIndex - 20;
-                            }
-                            
-                            // On insère entre la précédente et la cible
-                            let newSortIndex = (prevSortIndex + row.sortIndex) / 2;
-                            
-                            console.log(`🟢 INSERTION: Entre ${prevSortIndex} et ${row.sortIndex} -> ${newSortIndex}`);
-                            
-                            // Ajouter les nouvelles valeurs
-                            existingProps.columnIndex = colIndex;
-                            existingProps.ordreTri = newSortIndex;
-                            
-                            // Mettre à jour avec merge
-                            const instancesToPersist: any = {
-                                merge: [{
-                                    objectName: "styleLigne",
-                                    selector: selectionId.getSelector(),
-                                    properties: existingProps
-                                }]
-                            };
-                            
-                            // Mettre à jour l'affichage local immédiatement (optimiste)
-                            const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
-                            if (draggedRowData) {
-                                draggedRowData.columnIndex = colIndex;
-                                draggedRowData.sortIndex = newSortIndex;
+                        // CALCUL DE LA NOUVELLE POSITION (INSERTION AVANT)
+                        const targetRowIndex = rows.findIndex(r => r.originalName === row.originalName);
+                        let prevSortIndex = -1000;
+                        if (targetRowIndex > 0) {
+                            prevSortIndex = rows[targetRowIndex - 1].sortIndex;
+                        } else {
+                            prevSortIndex = row.sortIndex - 20;
+                        }
+                        let newSortIndex = (prevSortIndex + row.sortIndex) / 2;
+                        console.log(`🟢 INSERTION: Entre ${prevSortIndex} et ${row.sortIndex} -> ${newSortIndex}`);
+
+                        // CAS 1: LIGNE MANUELLE (Ligne A, B, etc.)
+                        if (isVirtual) {
+                            const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                            if (currentDraggedRow) {
+                                // Mettre à jour l'affichage local (optimiste)
+                                currentDraggedRow.columnIndex = colIndex;
+                                currentDraggedRow.sortIndex = newSortIndex;
                                 
                                 this.pendingChanges.set(draggedOriginalName, {
                                     columnIndex: colIndex,
                                     sortIndex: newSortIndex,
                                     timestamp: Date.now()
+                                });
+
+                                // Persister pour Ligne Manuelle (propriétés 'col' et 'pos')
+                                this.host.persistProperties({
+                                    merge: [{
+                                        objectName: draggedOriginalName, // ex: "ligneA"
+                                        selector: null,
+                                        properties: {
+                                            col: colIndex,
+                                            pos: newSortIndex
+                                        }
+                                    }]
                                 });
                                 
                                 // Reconstruire l'affichage
@@ -632,8 +596,149 @@ export class Visual implements IVisual {
                                 addBtn.title = "Ajouter une nouvelle colonne";
                                 this.flexContainer.appendChild(addBtn);
                             }
+                        }
+                        // CAS 2: LIGNE DE DONNÉES (Excel)
+                        else if (categories) {
+                            const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
                             
-                            this.host.persistProperties(instancesToPersist);
+                            if (draggedIndex !== -1) {
+                                const selectionId = this.host.createSelectionIdBuilder()
+                                    .withCategory(categories, draggedIndex)
+                                    .createSelectionId();
+                                
+                                // Récupérer les props existantes depuis allRowsData
+                                const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                                console.log("🔵 DRAG currentDraggedRow:", currentDraggedRow);
+                                
+                                let existingProps: any = {
+                                    marginBottom: 0, marginTop: 0, isHidden: false, 
+                                    marginColor: {solid:{color:"transparent"}},
+                                    customLabel: "", customAmount: "", isHeader: false, 
+                                    fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                                    bgLabel: {solid:{color:"transparent"}}, 
+                                    fillLabel: {solid:{color:"black"}}, 
+                                    italicLabel: false, boldLabel: false,
+                                    bgAmount: {solid:{color:"transparent"}}, 
+                                    fillAmount: {solid:{color:"black"}}, 
+                                    boldAmount: false
+                                };
+
+                                if (currentDraggedRow) {
+                                    existingProps.marginBottom = currentDraggedRow.marginBottom;
+                                    existingProps.marginTop = currentDraggedRow.marginTop;
+                                    existingProps.isHidden = currentDraggedRow.isHidden;
+                                    existingProps.marginColor = { solid: { color: currentDraggedRow.marginColor } };
+                                    existingProps.customLabel = currentDraggedRow.customLabel || "";
+                                    existingProps.customAmount = currentDraggedRow.customAmount || "";
+                                    existingProps.isHeader = currentDraggedRow.isHeader;
+                                    existingProps.fontSize = currentDraggedRow.fontSize;
+                                    existingProps.fontFamily = currentDraggedRow.font;
+                                    existingProps.bgLabel = { solid: { color: currentDraggedRow.bgLabel } };
+                                    existingProps.fillLabel = { solid: { color: currentDraggedRow.colorLabel } };
+                                    existingProps.italicLabel = currentDraggedRow.italicLabel;
+                                    existingProps.boldLabel = currentDraggedRow.boldLabel;
+                                    existingProps.bgAmount = { solid: { color: currentDraggedRow.bgAmount } };
+                                    existingProps.fillAmount = { solid: { color: currentDraggedRow.colorAmount } };
+                                    existingProps.boldAmount = currentDraggedRow.boldAmount;
+                                } else if (categories.objects && categories.objects[draggedIndex]) {
+                                    const style = categories.objects[draggedIndex]["styleLigne"];
+                                    if (style) {
+                                        Object.keys(style).forEach(key => {
+                                            if (key !== "columnIndex" && key !== "ordreTri") {
+                                                existingProps[key] = style[key];
+                                            }
+                                        });
+                                    }
+                                }
+                                
+                                console.log("🔵 DRAG existingProps:", JSON.stringify(existingProps));
+                                
+                                // Ajouter les nouvelles valeurs
+                                existingProps.columnIndex = colIndex;
+                                existingProps.ordreTri = newSortIndex;
+                                
+                                // Mettre à jour avec merge
+                                const instancesToPersist: any = {
+                                    merge: [{
+                                        objectName: "styleLigne",
+                                        selector: selectionId.getSelector(),
+                                        properties: existingProps
+                                    }]
+                                };
+                                
+                                // Mettre à jour l'affichage local immédiatement (optimiste)
+                                if (currentDraggedRow) {
+                                    currentDraggedRow.columnIndex = colIndex;
+                                    currentDraggedRow.sortIndex = newSortIndex;
+                                    
+                                    // IMPORTANT: Sauvegarder TOUTES les propriétés dans pendingChanges
+                                    this.pendingChanges.set(draggedOriginalName, {
+                                        columnIndex: colIndex,
+                                        sortIndex: newSortIndex,
+                                        marginBottom: currentDraggedRow.marginBottom,
+                                        marginTop: currentDraggedRow.marginTop,
+                                        isHidden: currentDraggedRow.isHidden,
+                                        marginColor: currentDraggedRow.marginColor,
+                                        customLabel: currentDraggedRow.customLabel,
+                                        customAmount: currentDraggedRow.customAmount,
+                                        isHeader: currentDraggedRow.isHeader,
+                                        fontSize: currentDraggedRow.fontSize,
+                                        font: currentDraggedRow.font,
+                                        bgLabel: currentDraggedRow.bgLabel,
+                                        colorLabel: currentDraggedRow.colorLabel,
+                                        italicLabel: currentDraggedRow.italicLabel,
+                                        boldLabel: currentDraggedRow.boldLabel,
+                                        bgAmount: currentDraggedRow.bgAmount,
+                                        colorAmount: currentDraggedRow.colorAmount,
+                                        boldAmount: currentDraggedRow.boldAmount,
+                                        timestamp: Date.now()
+                                    });
+                                    
+                                    // Reconstruire l'affichage
+                                    this.flexContainer.innerHTML = "";
+                                    let maxColUsed = 1;
+                                    this.allRowsData.forEach(r => {
+                                        if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
+                                    });
+                                    let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                                    
+                                    for (let i = 1; i <= maxColumnsToShow; i++) {
+                                        const colDiv = document.createElement("div");
+                                        colDiv.className = "dynamic-column"; 
+                                        const table = document.createElement("table");
+                                        colDiv.appendChild(table);
+
+                                        const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                                        const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
+                                        this.renderTableContent(table, colTitle, colRows, i, categories);
+                                        this.flexContainer.appendChild(colDiv);
+                                    }
+                                    
+                                    const addBtn = document.createElement("button");
+                                    addBtn.type = "button";
+                                    addBtn.className = "add-column-button";
+                                    addBtn.style.display = "flex";
+                                    addBtn.style.alignItems = "center";
+                                    addBtn.style.justifyContent = "center";
+                                    addBtn.style.minWidth = "40px";
+                                    addBtn.style.cursor = "pointer";
+                                    addBtn.style.opacity = "0.5";
+                                    addBtn.style.transition = "opacity 0.2s";
+                                    addBtn.style.fontSize = "18px";
+                                    addBtn.style.color = "#666";
+                                    addBtn.style.border = "2px dashed #ccc";
+                                    addBtn.style.borderRadius = "6px";
+                                    addBtn.style.margin = "10px";
+                                    addBtn.style.padding = "12px";
+                                    addBtn.style.background = "transparent";
+                                    addBtn.style.zIndex = "1000";
+                                    addBtn.innerHTML = "➕";
+                                    addBtn.title = "Ajouter une nouvelle colonne";
+                                    this.flexContainer.appendChild(addBtn);
+                                }
+                                
+                                this.host.persistProperties(instancesToPersist);
+                            }
                         }
                     }
                 }
@@ -652,7 +757,7 @@ export class Visual implements IVisual {
                                 objectName: "selectionMenu",
                                 selector: null,
                                 properties: {
-                                    "ligneActive": row.label
+                                    "ligneActive": row.originalName
                                 }
                             }]
                         });
@@ -742,6 +847,9 @@ export class Visual implements IVisual {
                         .withCategory(categories, draggedIndex)
                         .createSelectionId();
                     
+                    // Récupérer les props existantes depuis allRowsData pour avoir les dernières modifs (optimistes)
+                    const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+
                     let existingProps: any = {
                         marginBottom: 0, marginTop: 0, isHidden: false, 
                         marginColor: {solid:{color:"transparent"}},
@@ -754,8 +862,25 @@ export class Visual implements IVisual {
                         fillAmount: {solid:{color:"black"}}, 
                         boldAmount: false
                     };
-                    
-                    if (categories.objects && categories.objects[draggedIndex]) {
+
+                    if (currentDraggedRow) {
+                        existingProps.marginBottom = currentDraggedRow.marginBottom;
+                        existingProps.marginTop = currentDraggedRow.marginTop;
+                        existingProps.isHidden = currentDraggedRow.isHidden;
+                        existingProps.marginColor = { solid: { color: currentDraggedRow.marginColor } };
+                        existingProps.customLabel = currentDraggedRow.customLabel || "";
+                        existingProps.customAmount = currentDraggedRow.customAmount || "";
+                        existingProps.isHeader = currentDraggedRow.isHeader;
+                        existingProps.fontSize = currentDraggedRow.fontSize;
+                        existingProps.fontFamily = currentDraggedRow.font;
+                        existingProps.bgLabel = { solid: { color: currentDraggedRow.bgLabel } };
+                        existingProps.fillLabel = { solid: { color: currentDraggedRow.colorLabel } };
+                        existingProps.italicLabel = currentDraggedRow.italicLabel;
+                        existingProps.boldLabel = currentDraggedRow.boldLabel;
+                        existingProps.bgAmount = { solid: { color: currentDraggedRow.bgAmount } };
+                        existingProps.fillAmount = { solid: { color: currentDraggedRow.colorAmount } };
+                        existingProps.boldAmount = currentDraggedRow.boldAmount;
+                    } else if (categories.objects && categories.objects[draggedIndex]) {
                         const style = categories.objects[draggedIndex]["styleLigne"];
                         if (style) {
                             Object.keys(style).forEach(key => {
@@ -792,9 +917,26 @@ export class Visual implements IVisual {
                         draggedRowData.columnIndex = colIndex;
                         draggedRowData.sortIndex = newSortIndex;
                         
+                        // IMPORTANT: Sauvegarder TOUTES les propriétés dans pendingChanges
                         this.pendingChanges.set(draggedOriginalName, {
                             columnIndex: colIndex,
                             sortIndex: newSortIndex,
+                            marginBottom: draggedRowData.marginBottom,
+                            marginTop: draggedRowData.marginTop,
+                            isHidden: draggedRowData.isHidden,
+                            marginColor: draggedRowData.marginColor,
+                            customLabel: draggedRowData.customLabel,
+                            customAmount: draggedRowData.customAmount,
+                            isHeader: draggedRowData.isHeader,
+                            fontSize: draggedRowData.fontSize,
+                            font: draggedRowData.font,
+                            bgLabel: draggedRowData.bgLabel,
+                            colorLabel: draggedRowData.colorLabel,
+                            italicLabel: draggedRowData.italicLabel,
+                            boldLabel: draggedRowData.boldLabel,
+                            bgAmount: draggedRowData.bgAmount,
+                            colorAmount: draggedRowData.colorAmount,
+                            boldAmount: draggedRowData.boldAmount,
                             timestamp: Date.now()
                         });
                         
@@ -886,9 +1028,12 @@ export class Visual implements IVisual {
             return;
         }
         
-        const selectionId = this.host.createSelectionIdBuilder()
-            .withCategory(categories, index)
-            .createSelectionId();
+        // Utiliser l'identité directement si disponible pour plus de robustesse
+        let selectionIdBuilder = this.host.createSelectionIdBuilder();
+        // Note: withScopeIdentity n'est pas toujours exposé dans les types, on fallback sur withCategory
+        // qui utilise l'identité en interne si on passe la colonne category
+        selectionIdBuilder = selectionIdBuilder.withCategory(categories, index);
+        const selectionId = selectionIdBuilder.createSelectionId();
             
         // Helper pour mettre à jour pendingChanges
         const updatePending = (props: any) => {
@@ -897,9 +1042,44 @@ export class Visual implements IVisual {
             this.pendingChanges.set(row.originalName, updated);
         };
 
+        // Helper pour construire l'objet complet des propriétés (pour éviter les pertes)
+        const getFullProps = (overrides: any) => {
+            // Récupérer les données les plus fraîches (optimistes)
+            const currentRow = this.allRowsData.find(r => r.originalName === row.originalName) || row;
+            
+            let props: any = {
+                marginBottom: currentRow.marginBottom,
+                marginTop: currentRow.marginTop,
+                isHidden: currentRow.isHidden,
+                marginColor: { solid: { color: currentRow.marginColor } },
+                customLabel: currentRow.customLabel || "",
+                customAmount: currentRow.customAmount || "",
+                isHeader: currentRow.isHeader,
+                fontSize: currentRow.fontSize,
+                fontFamily: currentRow.font,
+                bgLabel: { solid: { color: currentRow.bgLabel } },
+                fillLabel: { solid: { color: currentRow.colorLabel } },
+                italicLabel: currentRow.italicLabel,
+                boldLabel: currentRow.boldLabel,
+                bgAmount: { solid: { color: currentRow.bgAmount } },
+                fillAmount: { solid: { color: currentRow.colorAmount } },
+                boldAmount: currentRow.boldAmount,
+                columnIndex: currentRow.columnIndex,
+                ordreTri: currentRow.sortIndex
+            };
+            
+            // Appliquer les surcharges
+            Object.keys(overrides).forEach(key => {
+                props[key] = overrides[key];
+            });
+            
+            return props;
+        };
+
         // Helper pour persister une propriété
         const updateProp = (propName: string, value: any) => {
             console.log(`🟢 Persisting ${propName}:`, value);
+            // Revenir à l'envoi simple pour éviter les conflits, mais s'assurer que le selector est bon
             this.host.persistProperties({
                 merge: [{
                     objectName: "styleLigne",
@@ -1166,12 +1346,18 @@ export class Visual implements IVisual {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
             if (indexChoisi !== -1) {
                 const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
+                
+                // Récupérer les données de la ligne actuelle (avec optimistic updates)
+                const rowData = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
+                
                 let props: any = {
-                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:""}},
-                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "", 
-                    bgLabel: {solid:{color:""}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
-                    bgAmount: {solid:{color:""}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
+                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
+                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                    bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
+                    bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
                 };
+                
+                // D'abord charger depuis la BD si disponible
                 if (categories.objects && categories.objects[indexChoisi]) {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
@@ -1195,6 +1381,29 @@ export class Visual implements IVisual {
                         if (style["boldAmount"] !== undefined) props.boldAmount = style["boldAmount"];
                     }
                 }
+                
+                // Ensuite ÉCRASER avec les données optimistes de rowData (qui inclut les pendingChanges)
+                if (rowData) {
+                    props.columnIndex = rowData.columnIndex;
+                    props.ordreTri = rowData.sortIndex;
+                    props.marginBottom = rowData.marginBottom;
+                    props.marginTop = rowData.marginTop;
+                    props.isHidden = rowData.isHidden;
+                    props.marginColor = { solid: { color: rowData.marginColor } };
+                    props.customLabel = rowData.customLabel || "";
+                    props.customAmount = rowData.customAmount || "";
+                    props.isHeader = rowData.isHeader;
+                    props.fontSize = rowData.fontSize;
+                    props.fontFamily = rowData.font;
+                    props.bgLabel = { solid: { color: rowData.bgLabel } };
+                    props.fillLabel = { solid: { color: rowData.colorLabel } };
+                    props.boldLabel = rowData.boldLabel;
+                    props.italicLabel = rowData.italicLabel;
+                    props.bgAmount = { solid: { color: rowData.bgAmount } };
+                    props.fillAmount = { solid: { color: rowData.colorAmount } };
+                    props.boldAmount = rowData.boldAmount;
+                }
+                
                 instances.push({ objectName: "styleLigne", selector: selectionId.getSelector(), properties: props });
             }
         }
