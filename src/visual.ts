@@ -12,6 +12,7 @@ import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnume
 import "../style/visual.less";
 
 interface RowData {
+    originalName: string;
     label: string;      
     amount: string;
     columnIndex: number; 
@@ -44,6 +45,9 @@ export class Visual implements IVisual {
     private currentSelectedLabel: string = ""; 
     private columnTitles: string[] = [];
     private metadata: any;
+    
+    // Stocker les changements en attente pour éviter le scintillement
+    private pendingChanges: Map<string, {columnIndex: number, sortIndex: number, timestamp: number}> = new Map();
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -94,6 +98,7 @@ export class Visual implements IVisual {
             categories.values.forEach((catValue, index) => {
                 const originalName = catValue.toString();
                 let row: RowData = {
+                    originalName: originalName,
                     label: originalName,
                     amount: values ? values.values[index]?.toString() : "",
                     columnIndex: 1, sortIndex: index * 10,
@@ -130,6 +135,27 @@ export class Visual implements IVisual {
                         if (style["boldAmount"] !== undefined) row.boldAmount = style["boldAmount"] as boolean;
                     }
                 }
+                
+                // Appliquer les changements en attente (optimiste)
+                if (this.pendingChanges.has(originalName)) {
+                    const pending = this.pendingChanges.get(originalName);
+                    // Si le changement est récent (< 30 secondes) ou si les données Power BI n'ont pas encore rattrapé
+                    if (Date.now() - pending.timestamp < 30000) {
+                        // Vérifier si Power BI a rattrapé
+                        if (row.columnIndex === pending.columnIndex && Math.abs(row.sortIndex - pending.sortIndex) < 0.01) {
+                            // Power BI est à jour, on peut supprimer le pending
+                            this.pendingChanges.delete(originalName);
+                        } else {
+                            // Power BI n'est pas encore à jour, on force la valeur locale
+                            row.columnIndex = pending.columnIndex;
+                            row.sortIndex = pending.sortIndex;
+                        }
+                    } else {
+                        // Trop vieux, on supprime
+                        this.pendingChanges.delete(originalName);
+                    }
+                }
+                
                 if (row.columnIndex > maxColumnIndexUsed) maxColumnIndexUsed = row.columnIndex;
                 this.allRowsData.push(row);
             });
@@ -154,6 +180,7 @@ export class Visual implements IVisual {
                     let it = s["italic"] ? s["italic"] as boolean : false;
 
                     let vRow: RowData = {
+                        originalName: key,
                         label: txt, amount: "", 
                         columnIndex: col, sortIndex: pos,
                         marginBottom: 0, marginTop: mt, isHidden: false, marginColor: "transparent",
@@ -181,8 +208,9 @@ export class Visual implements IVisual {
 
             const colRows = this.allRowsData.filter(r => r.columnIndex === i);
             const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
-            // On passe l'index de colonne (1-based) pour le renommage
-            this.renderTableContent(table, colTitle, colRows, i);
+            // On passe l'index de colonne (1-based) pour le renommage et categories pour le drag&drop
+            const categories = this.categoricalData ? this.categoricalData.categories[0] : null;
+            this.renderTableContent(table, colTitle, colRows, i, categories);
             this.flexContainer.appendChild(colDiv);
         }
         
@@ -251,7 +279,7 @@ export class Visual implements IVisual {
         this.flexContainer.appendChild(addColumnDiv);
     }
 
-    private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number) {
+    private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number, categories: any) {
         rows.sort((a, b) => a.sortIndex - b.sortIndex);
         const thead = document.createElement("thead");
         const trHead = document.createElement("tr");
@@ -394,21 +422,206 @@ export class Visual implements IVisual {
 
             const tr = document.createElement("tr");
             
+            // Drag & Drop pour déplacer les lignes
+            if (!row.isVirtual) {
+                tr.draggable = true;
+                tr.style.cursor = "move";
+                
+                tr.ondragstart = (e: DragEvent) => {
+                    e.stopPropagation();
+                    if (e.dataTransfer) {
+                        e.dataTransfer.effectAllowed = "move";
+                        
+                        // Utiliser les données actuelles de allRowsData (avec mises à jour locales)
+                        const currentRow = this.allRowsData.find(r => r.originalName === row.originalName);
+                        const dragData = {
+                            label: row.label,
+                            originalName: row.originalName,
+                            columnIndex: currentRow ? currentRow.columnIndex : row.columnIndex,
+                            sortIndex: currentRow ? currentRow.sortIndex : row.sortIndex
+                        };
+                        console.log("🔵 DRAG START:", dragData);
+                        e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+                        tr.style.opacity = "0.5";
+                    }
+                };
+                
+                tr.ondragend = (e: DragEvent) => {
+                    console.log("🔵 DRAG END");
+                    tr.style.opacity = "1";
+                };
+            }
+
+            // Autoriser le drop sur TOUTES les lignes (même virtuelles)
+            tr.ondragover = (e: DragEvent) => {
+                e.preventDefault();
+                if (e.dataTransfer) {
+                    e.dataTransfer.dropEffect = "move";
+                }
+                tr.style.borderTop = "2px solid #007acc";
+            };
+            
+            tr.ondragleave = (e: DragEvent) => {
+                tr.style.borderTop = "";
+            };
+            
+            tr.ondrop = (e: DragEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+                tr.style.borderTop = "";
+                
+                console.log("🟢 DROP EVENT - Target:", row.label, "Col:", colIndex, "SortIndex:", row.sortIndex);
+                
+                if (e.dataTransfer && categories) {
+                    const dataStr = e.dataTransfer.getData("text/plain");
+                    const data = JSON.parse(dataStr);
+                    const draggedLabel = data.label;
+                    const draggedOriginalName = data.originalName || data.label;
+                    const targetLabel = row.label;
+                    const targetOriginalName = row.originalName;
+                    
+                    if (draggedOriginalName !== targetOriginalName) {
+                        const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
+                        
+                        if (draggedIndex !== -1) {
+                            const selectionId = this.host.createSelectionIdBuilder()
+                                .withCategory(categories, draggedIndex)
+                                .createSelectionId();
+                            
+                            // Récupérer les props existantes
+                            let existingProps: any = {
+                                marginBottom: 0, marginTop: 0, isHidden: false, 
+                                marginColor: {solid:{color:"transparent"}},
+                                customLabel: "", customAmount: "", isHeader: false, 
+                                fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                                bgLabel: {solid:{color:"transparent"}}, 
+                                fillLabel: {solid:{color:"black"}}, 
+                                italicLabel: false, boldLabel: false,
+                                bgAmount: {solid:{color:"transparent"}}, 
+                                fillAmount: {solid:{color:"black"}}, 
+                                boldAmount: false
+                            };
+                            
+                            if (categories.objects && categories.objects[draggedIndex]) {
+                                const style = categories.objects[draggedIndex]["styleLigne"];
+                                if (style) {
+                                    Object.keys(style).forEach(key => {
+                                        if (key !== "columnIndex" && key !== "ordreTri") {
+                                            existingProps[key] = style[key];
+                                        }
+                                    });
+                                }
+                            }
+                            
+                            // CALCUL DE LA NOUVELLE POSITION (INSERTION AVANT)
+                            // Trouver l'index de la ligne cible dans le tableau trié de cette colonne
+                            // rows est déjà trié par sortIndex dans renderTableContent
+                            const targetRowIndex = rows.findIndex(r => r.originalName === row.originalName);
+                            
+                            let prevSortIndex = -1000;
+                            if (targetRowIndex > 0) {
+                                prevSortIndex = rows[targetRowIndex - 1].sortIndex;
+                            } else {
+                                // Si c'est la première ligne, on prend une valeur inférieure
+                                prevSortIndex = row.sortIndex - 20;
+                            }
+                            
+                            // On insère entre la précédente et la cible
+                            let newSortIndex = (prevSortIndex + row.sortIndex) / 2;
+                            
+                            console.log(`🟢 INSERTION: Entre ${prevSortIndex} et ${row.sortIndex} -> ${newSortIndex}`);
+                            
+                            // Ajouter les nouvelles valeurs
+                            existingProps.columnIndex = colIndex;
+                            existingProps.ordreTri = newSortIndex;
+                            
+                            // Mettre à jour avec merge
+                            const instancesToPersist: any = {
+                                merge: [{
+                                    objectName: "styleLigne",
+                                    selector: selectionId.getSelector(),
+                                    properties: existingProps
+                                }]
+                            };
+                            
+                            // Mettre à jour l'affichage local immédiatement (optimiste)
+                            const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                            if (draggedRowData) {
+                                draggedRowData.columnIndex = colIndex;
+                                draggedRowData.sortIndex = newSortIndex;
+                                
+                                this.pendingChanges.set(draggedOriginalName, {
+                                    columnIndex: colIndex,
+                                    sortIndex: newSortIndex,
+                                    timestamp: Date.now()
+                                });
+                                
+                                // Reconstruire l'affichage
+                                this.flexContainer.innerHTML = "";
+                                let maxColUsed = 1;
+                                this.allRowsData.forEach(r => {
+                                    if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
+                                });
+                                let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                                
+                                for (let i = 1; i <= maxColumnsToShow; i++) {
+                                    const colDiv = document.createElement("div");
+                                    colDiv.className = "dynamic-column"; 
+                                    const table = document.createElement("table");
+                                    colDiv.appendChild(table);
+
+                                    const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                                    const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
+                                    this.renderTableContent(table, colTitle, colRows, i, categories);
+                                    this.flexContainer.appendChild(colDiv);
+                                }
+                                
+                                const addBtn = document.createElement("button");
+                                addBtn.type = "button";
+                                addBtn.className = "add-column-button";
+                                addBtn.style.display = "flex";
+                                addBtn.style.alignItems = "center";
+                                addBtn.style.justifyContent = "center";
+                                addBtn.style.minWidth = "40px";
+                                addBtn.style.cursor = "pointer";
+                                addBtn.style.opacity = "0.5";
+                                addBtn.style.transition = "opacity 0.2s";
+                                addBtn.style.fontSize = "18px";
+                                addBtn.style.color = "#666";
+                                addBtn.style.border = "2px dashed #ccc";
+                                addBtn.style.borderRadius = "6px";
+                                addBtn.style.margin = "10px";
+                                addBtn.style.padding = "12px";
+                                addBtn.style.background = "transparent";
+                                addBtn.style.zIndex = "1000";
+                                addBtn.innerHTML = "➕";
+                                addBtn.title = "Ajouter une nouvelle colonne";
+                                this.flexContainer.appendChild(addBtn);
+                            }
+                            
+                            this.host.persistProperties(instancesToPersist);
+                        }
+                    }
+                }
+            };
+            
             // CLIC GAUCHE SUR LIGNE (Sélection Auto)
             if (!row.isVirtual) {
-                tr.onclick = () => {
-                    this.host.persistProperties({
-                        merge: [{
-                            objectName: "selectionMenu",
-                            selector: null, // <--- CORRECTION ICI (IMPORTANT)
-                            properties: {
-                                "ligneActive": row.label
-                            }
-                        }]
-                    });
+                tr.onclick = (e: MouseEvent) => {
+                    // Ne pas déclencher si on est en train de draguer
+                    if (tr.draggable && e.detail === 1) {
+                        this.host.persistProperties({
+                            merge: [{
+                                objectName: "selectionMenu",
+                                selector: null,
+                                properties: {
+                                    "ligneActive": row.label
+                                }
+                            }]
+                        });
+                    }
                 };
-                tr.style.cursor = "pointer";
-                tr.title = "Cliquer pour modifier cette ligne";
+                tr.title = "Cliquer pour modifier | Glisser pour déplacer";
             }
 
             let finalAmount = "";
@@ -449,6 +662,150 @@ export class Visual implements IVisual {
                 trSpB.appendChild(tdSpB); tbody.appendChild(trSpB);
             }
         });
+
+        // ZONE DE DROP EN BAS DE COLONNE (Pour ajouter à la fin)
+        const dropZoneTr = document.createElement("tr");
+        dropZoneTr.style.height = "40px"; 
+        const dropZoneTd = document.createElement("td");
+        dropZoneTd.colSpan = 2;
+        dropZoneTd.style.backgroundColor = "transparent";
+        dropZoneTd.style.border = "2px dashed transparent";
+        dropZoneTd.style.transition = "all 0.2s";
+        dropZoneTd.innerHTML = "";
+        dropZoneTr.appendChild(dropZoneTd);
+
+        dropZoneTr.ondragover = (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+            dropZoneTd.style.border = "2px dashed #007acc";
+            dropZoneTd.style.backgroundColor = "rgba(0, 122, 204, 0.1)";
+        };
+        dropZoneTr.ondragleave = (e) => {
+            dropZoneTd.style.border = "2px dashed transparent";
+            dropZoneTd.style.backgroundColor = "transparent";
+        };
+        dropZoneTr.ondrop = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZoneTd.style.border = "2px dashed transparent";
+            dropZoneTd.style.backgroundColor = "transparent";
+
+            if (e.dataTransfer && categories) {
+                const dataStr = e.dataTransfer.getData("text/plain");
+                const data = JSON.parse(dataStr);
+                const draggedLabel = data.label;
+                const draggedOriginalName = data.originalName || data.label;
+                
+                const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
+                if (draggedIndex !== -1) {
+                    const selectionId = this.host.createSelectionIdBuilder()
+                        .withCategory(categories, draggedIndex)
+                        .createSelectionId();
+                    
+                    let existingProps: any = {
+                        marginBottom: 0, marginTop: 0, isHidden: false, 
+                        marginColor: {solid:{color:"transparent"}},
+                        customLabel: "", customAmount: "", isHeader: false, 
+                        fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                        bgLabel: {solid:{color:"transparent"}}, 
+                        fillLabel: {solid:{color:"black"}}, 
+                        italicLabel: false, boldLabel: false,
+                        bgAmount: {solid:{color:"transparent"}}, 
+                        fillAmount: {solid:{color:"black"}}, 
+                        boldAmount: false
+                    };
+                    
+                    if (categories.objects && categories.objects[draggedIndex]) {
+                        const style = categories.objects[draggedIndex]["styleLigne"];
+                        if (style) {
+                            Object.keys(style).forEach(key => {
+                                if (key !== "columnIndex" && key !== "ordreTri") {
+                                    existingProps[key] = style[key];
+                                }
+                            });
+                        }
+                    }
+                    
+                    // CALCUL DE LA NOUVELLE POSITION (FIN DE COLONNE)
+                    let lastSortIndex = 0;
+                    if (rows.length > 0) {
+                        lastSortIndex = rows[rows.length - 1].sortIndex;
+                    }
+                    let newSortIndex = lastSortIndex + 10;
+                    
+                    console.log(`🟢 INSERTION FIN: Après ${lastSortIndex} -> ${newSortIndex}`);
+                    
+                    existingProps.columnIndex = colIndex;
+                    existingProps.ordreTri = newSortIndex;
+                    
+                    const instancesToPersist: any = {
+                        merge: [{
+                            objectName: "styleLigne",
+                            selector: selectionId.getSelector(),
+                            properties: existingProps
+                        }]
+                    };
+                    
+                    // Optimistic Update
+                    const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                    if (draggedRowData) {
+                        draggedRowData.columnIndex = colIndex;
+                        draggedRowData.sortIndex = newSortIndex;
+                        
+                        this.pendingChanges.set(draggedOriginalName, {
+                            columnIndex: colIndex,
+                            sortIndex: newSortIndex,
+                            timestamp: Date.now()
+                        });
+                        
+                        this.flexContainer.innerHTML = "";
+                        let maxColUsed = 1;
+                        this.allRowsData.forEach(r => {
+                            if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
+                        });
+                        let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                        
+                        for (let i = 1; i <= maxColumnsToShow; i++) {
+                            const colDiv = document.createElement("div");
+                            colDiv.className = "dynamic-column"; 
+                            const table = document.createElement("table");
+                            colDiv.appendChild(table);
+
+                            const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                            const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
+                            this.renderTableContent(table, colTitle, colRows, i, categories);
+                            this.flexContainer.appendChild(colDiv);
+                        }
+                        
+                        const addBtn = document.createElement("button");
+                        addBtn.type = "button";
+                        addBtn.className = "add-column-button";
+                        addBtn.innerHTML = "➕";
+                        addBtn.style.display = "flex";
+                        addBtn.style.alignItems = "center";
+                        addBtn.style.justifyContent = "center";
+                        addBtn.style.minWidth = "40px";
+                        addBtn.style.cursor = "pointer";
+                        addBtn.style.opacity = "0.5";
+                        addBtn.style.transition = "opacity 0.2s";
+                        addBtn.style.fontSize = "18px";
+                        addBtn.style.color = "#666";
+                        addBtn.style.border = "2px dashed #ccc";
+                        addBtn.style.borderRadius = "6px";
+                        addBtn.style.margin = "10px";
+                        addBtn.style.padding = "12px";
+                        addBtn.style.background = "transparent";
+                        addBtn.style.zIndex = "1000";
+                        addBtn.title = "Ajouter une nouvelle colonne";
+                        this.flexContainer.appendChild(addBtn);
+                    }
+                    
+                    this.host.persistProperties(instancesToPersist);
+                }
+            }
+        };
+        tbody.appendChild(dropZoneTr);
+
         targetTable.appendChild(tbody);
     }
 
