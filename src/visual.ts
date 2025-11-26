@@ -130,6 +130,7 @@ export class Visual implements IVisual {
                     const object = categories.objects[index];
                     if (object["styleLigne"]) {
                         const style = object["styleLigne"];
+                        console.log("🔷 LOADING style for", originalName, ":", JSON.stringify(style));
                         if (style["columnIndex"]) row.columnIndex = style["columnIndex"] as number;
                         if (row.columnIndex < 1) row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined) row.sortIndex = style["ordreTri"] as number;
@@ -156,6 +157,7 @@ export class Visual implements IVisual {
                 // Appliquer les changements en attente (optimiste)
                 if (this.pendingChanges.has(originalName)) {
                     const pending = this.pendingChanges.get(originalName);
+                    console.log("🟡 PENDING CHANGES for", originalName, ":", JSON.stringify(pending));
                     // Si le changement est récent (< 30 secondes)
                     if (Date.now() - pending.timestamp < 30000) {
                         let allMatched = true;
@@ -653,18 +655,32 @@ export class Visual implements IVisual {
                                 
                                 console.log("🔵 DRAG existingProps:", JSON.stringify(existingProps));
                                 
-                                // Ajouter les nouvelles valeurs
-                                existingProps.columnIndex = colIndex;
-                                existingProps.ordreTri = newSortIndex;
-                                
-                                // Mettre à jour avec merge
-                                const instancesToPersist: any = {
-                                    merge: [{
-                                        objectName: "styleLigne",
-                                        selector: selectionId.getSelector(),
-                                        properties: existingProps
-                                    }]
-                                };
+                                let instancesToPersist: any;
+                                try {
+                                    // Ajouter les nouvelles valeurs
+                                    existingProps.columnIndex = colIndex;
+                                    existingProps.ordreTri = newSortIndex;
+                                    
+                                    console.log("🔵 DRAG Final props to persist:", JSON.stringify(existingProps));
+                                    
+                                    // Mettre à jour avec merge
+                                    instancesToPersist = {
+                                        merge: [{
+                                            objectName: "styleLigne",
+                                            selector: selectionId.getSelector(),
+                                            properties: existingProps
+                                        }]
+                                    };
+                                    
+                                    console.log("🟢 PERSISTING (drag):", JSON.stringify(instancesToPersist));
+                                    
+                                    // ⚠️ IMPORTANT: Appeler persistProperties AVANT de reconstruire le DOM
+                                    // sinon le handler ondrop est détruit avant de pouvoir persister !
+                                    this.host.persistProperties(instancesToPersist);
+                                    console.log("✅ persistProperties called successfully (drop on row)");
+                                } catch (err) {
+                                    console.error("❌ ERROR during persist:", err);
+                                }
                                 
                                 // Mettre à jour l'affichage local immédiatement (optimiste)
                                 if (currentDraggedRow) {
@@ -736,8 +752,6 @@ export class Visual implements IVisual {
                                     addBtn.title = "Ajouter une nouvelle colonne";
                                     this.flexContainer.appendChild(addBtn);
                                 }
-                                
-                                this.host.persistProperties(instancesToPersist);
                             }
                         }
                     }
@@ -785,6 +799,12 @@ export class Visual implements IVisual {
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
             const cellBg = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgLabel;
+            
+            // DEBUG: Vérifier les couleurs au moment du rendu
+            if (row.colorLabel !== "black" || row.bgLabel !== "transparent") {
+                console.log("🎨 RENDERING", row.label, "colorLabel:", row.colorLabel, "bgLabel:", row.bgLabel);
+            }
+            
             tdName.style.backgroundColor = cellBg; tdName.style.color = row.colorLabel;
             if (row.boldLabel) tdName.style.fontWeight = "bold";
             if (row.italicLabel) tdName.style.fontStyle = "italic";
@@ -900,8 +920,12 @@ export class Visual implements IVisual {
                     
                     console.log(`🟢 INSERTION FIN: Après ${lastSortIndex} -> ${newSortIndex}`);
                     
+                    console.log("🔵 DRAG (END ZONE) existingProps:", JSON.stringify(existingProps));
+                    
                     existingProps.columnIndex = colIndex;
                     existingProps.ordreTri = newSortIndex;
+                    
+                    console.log("🔵 DRAG (END ZONE) Final props to persist:", JSON.stringify(existingProps));
                     
                     const instancesToPersist: any = {
                         merge: [{
@@ -910,6 +934,12 @@ export class Visual implements IVisual {
                             properties: existingProps
                         }]
                     };
+                    
+                    console.log("🟢 PERSISTING (drag end zone):", JSON.stringify(instancesToPersist));
+                    
+                    // ⚠️ IMPORTANT: Appeler persistProperties AVANT de reconstruire le DOM
+                    this.host.persistProperties(instancesToPersist);
+                    console.log("✅ persistProperties called successfully (drop at end)");
                     
                     // Optimistic Update
                     const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
@@ -981,8 +1011,6 @@ export class Visual implements IVisual {
                         addBtn.title = "Ajouter une nouvelle colonne";
                         this.flexContainer.appendChild(addBtn);
                     }
-                    
-                    this.host.persistProperties(instancesToPersist);
                 }
             }
         };

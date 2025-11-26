@@ -93,6 +93,7 @@ class Visual {
                     const object = categories.objects[index];
                     if (object["styleLigne"]) {
                         const style = object["styleLigne"];
+                        console.log("🔷 LOADING style for", originalName, ":", JSON.stringify(style));
                         if (style["columnIndex"])
                             row.columnIndex = style["columnIndex"];
                         if (row.columnIndex < 1)
@@ -136,6 +137,7 @@ class Visual {
                 // Appliquer les changements en attente (optimiste)
                 if (this.pendingChanges.has(originalName)) {
                     const pending = this.pendingChanges.get(originalName);
+                    console.log("🟡 PENDING CHANGES for", originalName, ":", JSON.stringify(pending));
                     // Si le changement est récent (< 30 secondes)
                     if (Date.now() - pending.timestamp < 30000) {
                         let allMatched = true;
@@ -586,17 +588,29 @@ class Visual {
                                     }
                                 }
                                 console.log("🔵 DRAG existingProps:", JSON.stringify(existingProps));
-                                // Ajouter les nouvelles valeurs
-                                existingProps.columnIndex = colIndex;
-                                existingProps.ordreTri = newSortIndex;
-                                // Mettre à jour avec merge
-                                const instancesToPersist = {
-                                    merge: [{
-                                            objectName: "styleLigne",
-                                            selector: selectionId.getSelector(),
-                                            properties: existingProps
-                                        }]
-                                };
+                                let instancesToPersist;
+                                try {
+                                    // Ajouter les nouvelles valeurs
+                                    existingProps.columnIndex = colIndex;
+                                    existingProps.ordreTri = newSortIndex;
+                                    console.log("🔵 DRAG Final props to persist:", JSON.stringify(existingProps));
+                                    // Mettre à jour avec merge
+                                    instancesToPersist = {
+                                        merge: [{
+                                                objectName: "styleLigne",
+                                                selector: selectionId.getSelector(),
+                                                properties: existingProps
+                                            }]
+                                    };
+                                    console.log("🟢 PERSISTING (drag):", JSON.stringify(instancesToPersist));
+                                    // ⚠️ IMPORTANT: Appeler persistProperties AVANT de reconstruire le DOM
+                                    // sinon le handler ondrop est détruit avant de pouvoir persister !
+                                    this.host.persistProperties(instancesToPersist);
+                                    console.log("✅ persistProperties called successfully (drop on row)");
+                                }
+                                catch (err) {
+                                    console.error("❌ ERROR during persist:", err);
+                                }
                                 // Mettre à jour l'affichage local immédiatement (optimiste)
                                 if (currentDraggedRow) {
                                     currentDraggedRow.columnIndex = colIndex;
@@ -663,7 +677,6 @@ class Visual {
                                     addBtn.title = "Ajouter une nouvelle colonne";
                                     this.flexContainer.appendChild(addBtn);
                                 }
-                                this.host.persistProperties(instancesToPersist);
                             }
                         }
                     }
@@ -707,6 +720,10 @@ class Visual {
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
             const cellBg = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgLabel;
+            // DEBUG: Vérifier les couleurs au moment du rendu
+            if (row.colorLabel !== "black" || row.bgLabel !== "transparent") {
+                console.log("🎨 RENDERING", row.label, "colorLabel:", row.colorLabel, "bgLabel:", row.bgLabel);
+            }
             tdName.style.backgroundColor = cellBg;
             tdName.style.color = row.colorLabel;
             if (row.boldLabel)
@@ -819,8 +836,10 @@ class Visual {
                     }
                     let newSortIndex = lastSortIndex + 10;
                     console.log(`🟢 INSERTION FIN: Après ${lastSortIndex} -> ${newSortIndex}`);
+                    console.log("🔵 DRAG (END ZONE) existingProps:", JSON.stringify(existingProps));
                     existingProps.columnIndex = colIndex;
                     existingProps.ordreTri = newSortIndex;
+                    console.log("🔵 DRAG (END ZONE) Final props to persist:", JSON.stringify(existingProps));
                     const instancesToPersist = {
                         merge: [{
                                 objectName: "styleLigne",
@@ -828,6 +847,10 @@ class Visual {
                                 properties: existingProps
                             }]
                     };
+                    console.log("🟢 PERSISTING (drag end zone):", JSON.stringify(instancesToPersist));
+                    // ⚠️ IMPORTANT: Appeler persistProperties AVANT de reconstruire le DOM
+                    this.host.persistProperties(instancesToPersist);
+                    console.log("✅ persistProperties called successfully (drop at end)");
                     // Optimistic Update
                     const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                     if (draggedRowData) {
@@ -894,7 +917,6 @@ class Visual {
                         addBtn.title = "Ajouter une nouvelle colonne";
                         this.flexContainer.appendChild(addBtn);
                     }
-                    this.host.persistProperties(instancesToPersist);
                 }
             }
         };
