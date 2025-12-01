@@ -3,7 +3,7 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 849:
+/***/ 370:
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
@@ -935,8 +935,7 @@ class Visual {
         this.toolbar.onmousedown = (e) => e.stopPropagation();
         this.toolbar.onclick = (e) => e.stopPropagation();
         // Positionner la toolbar
-        // S'assurer qu'elle ne sort pas de l'écran
-        const toolbarWidth = 300; // Approx
+        const toolbarWidth = 300;
         let left = x - toolbarWidth / 2;
         if (left < 10)
             left = 10;
@@ -944,20 +943,16 @@ class Visual {
             left = window.innerWidth - toolbarWidth - 10;
         let top = y - 50;
         if (top < 10)
-            top = y + 20; // Afficher en dessous si trop haut
+            top = y + 20;
         this.toolbar.style.left = left + "px";
         this.toolbar.style.top = top + "px";
-        // Créer le SelectionId pour cette ligne
         const index = categories.values.findIndex(v => v.toString() === row.originalName);
         console.log("🟢 Index found:", index);
         if (index === -1) {
             console.error("🔴 Index not found for", row.originalName);
             return;
         }
-        // Utiliser l'identité directement si disponible pour plus de robustesse
         let selectionIdBuilder = this.host.createSelectionIdBuilder();
-        // Note: withScopeIdentity n'est pas toujours exposé dans les types, on fallback sur withCategory
-        // qui utilise l'identité en interne si on passe la colonne category
         selectionIdBuilder = selectionIdBuilder.withCategory(categories, index);
         const selectionId = selectionIdBuilder.createSelectionId();
         // Helper pour mettre à jour pendingChanges
@@ -966,11 +961,16 @@ class Visual {
             const updated = { ...current, ...props, timestamp: Date.now() };
             this.pendingChanges.set(row.originalName, updated);
         };
-        // Helper pour construire l'objet complet des propriétés (pour éviter les pertes)
-        const getFullProps = (overrides) => {
-            // Récupérer les données les plus fraîches (optimistes)
-            const currentRow = this.allRowsData.find(r => r.originalName === row.originalName) || row;
-            let props = {
+        // Helper pour récupérer les données actuelles de la ligne
+        const getCurrentRow = () => {
+            return this.allRowsData.find(r => r.originalName === row.originalName) || row;
+        };
+        // Helper pour persister TOUTES les propriétés (évite les pertes)
+        const persistAllProps = (overrides) => {
+            const currentRow = getCurrentRow();
+            const fullProps = {
+                columnIndex: currentRow.columnIndex,
+                ordreTri: currentRow.sortIndex,
                 marginBottom: currentRow.marginBottom,
                 marginTop: currentRow.marginTop,
                 isHidden: currentRow.isHidden,
@@ -986,27 +986,18 @@ class Visual {
                 boldLabel: currentRow.boldLabel,
                 bgAmount: { solid: { color: currentRow.bgAmount } },
                 fillAmount: { solid: { color: currentRow.colorAmount } },
-                boldAmount: currentRow.boldAmount,
-                columnIndex: currentRow.columnIndex,
-                ordreTri: currentRow.sortIndex
+                boldAmount: currentRow.boldAmount
             };
             // Appliquer les surcharges
             Object.keys(overrides).forEach(key => {
-                props[key] = overrides[key];
+                fullProps[key] = overrides[key];
             });
-            return props;
-        };
-        // Helper pour persister une propriété
-        const updateProp = (propName, value) => {
-            console.log(`🟢 Persisting ${propName}:`, value);
-            // Revenir à l'envoi simple pour éviter les conflits, mais s'assurer que le selector est bon
+            console.log("🟢 Persisting ALL props:", JSON.stringify(fullProps));
             this.host.persistProperties({
-                merge: [{
+                replace: [{
                         objectName: "styleLigne",
                         selector: selectionId.getSelector(),
-                        properties: {
-                            [propName]: value
-                        }
+                        properties: fullProps
                     }]
             });
         };
@@ -1021,7 +1012,6 @@ class Visual {
             e.stopPropagation();
             const newVal = !row.boldLabel;
             btnBold.className = newVal ? "active" : "";
-            // Optimistic Update
             row.boldLabel = newVal;
             row.boldAmount = newVal;
             const weight = newVal ? "bold" : "normal";
@@ -1030,17 +1020,7 @@ class Visual {
             if (tr.cells[1])
                 tr.cells[1].style.fontWeight = weight;
             updatePending({ boldLabel: newVal, boldAmount: newVal });
-            // Appliquer à Label ET Amount pour cohérence
-            this.host.persistProperties({
-                merge: [{
-                        objectName: "styleLigne",
-                        selector: selectionId.getSelector(),
-                        properties: {
-                            boldLabel: newVal,
-                            boldAmount: newVal
-                        }
-                    }]
-            });
+            persistAllProps({ boldLabel: newVal, boldAmount: newVal });
         };
         this.toolbar.appendChild(btnBold);
         // ITALIQUE (I)
@@ -1053,131 +1033,83 @@ class Visual {
             e.stopPropagation();
             const newVal = !row.italicLabel;
             btnItalic.className = newVal ? "active" : "";
-            // Optimistic Update
             row.italicLabel = newVal;
             const style = newVal ? "italic" : "normal";
             if (tr.cells[0])
                 tr.cells[0].style.fontStyle = style;
             updatePending({ italicLabel: newVal });
-            updateProp("italicLabel", newVal);
+            persistAllProps({ italicLabel: newVal });
         };
         this.toolbar.appendChild(btnItalic);
         // SEPARATEUR
         const sep1 = document.createElement("div");
         sep1.className = "separator";
         this.toolbar.appendChild(sep1);
-        // TAILLE POLICE (-)
-        const btnMinus = document.createElement("button");
-        btnMinus.innerText = "A-";
-        btnMinus.title = "Diminuer la police";
-        btnMinus.onclick = (e) => {
+        // TAILLE POLICE (sélecteur)
+        const fontSizeWrapper = document.createElement("div");
+        fontSizeWrapper.className = "font-size-wrapper";
+        const lblFontSize = document.createElement("label");
+        lblFontSize.innerText = "Taille";
+        lblFontSize.style.marginRight = "4px";
+        fontSizeWrapper.appendChild(lblFontSize);
+        const selectFontSize = document.createElement("select");
+        selectFontSize.title = "Taille de police";
+        for (let s = 8; s <= 24; s++) {
+            const opt = document.createElement("option");
+            opt.value = s.toString();
+            opt.innerText = s.toString();
+            if (row.fontSize === s)
+                opt.selected = true;
+            selectFontSize.appendChild(opt);
+        }
+        selectFontSize.onchange = (e) => {
             e.stopPropagation();
-            let s = row.fontSize || 12;
-            if (s > 8) {
-                s = s - 1;
-                // Optimistic Update
-                row.fontSize = s;
-                tr.style.fontSize = s + "px";
-                updatePending({ fontSize: s });
-                updateProp("fontSize", s);
-            }
+            const s = parseInt(selectFontSize.value, 10);
+            row.fontSize = s;
+            tr.style.fontSize = s + "px";
+            updatePending({ fontSize: s });
+            persistAllProps({ fontSize: s });
         };
-        this.toolbar.appendChild(btnMinus);
-        // TAILLE POLICE (+)
-        const btnPlus = document.createElement("button");
-        btnPlus.innerText = "A+";
-        btnPlus.title = "Augmenter la police";
-        btnPlus.onclick = (e) => {
-            e.stopPropagation();
-            let s = row.fontSize || 12;
-            if (s < 24) {
-                s = s + 1;
-                // Optimistic Update
-                row.fontSize = s;
-                tr.style.fontSize = s + "px";
-                updatePending({ fontSize: s });
-                updateProp("fontSize", s);
-            }
-        };
-        this.toolbar.appendChild(btnPlus);
+        fontSizeWrapper.appendChild(selectFontSize);
+        this.toolbar.appendChild(fontSizeWrapper);
         // SEPARATEUR
         const sep2 = document.createElement("div");
         sep2.className = "separator";
         this.toolbar.appendChild(sep2);
-        // COULEUR TEXTE
-        const divColor = document.createElement("div");
-        divColor.className = "color-picker-wrapper";
-        const lblColor = document.createElement("label");
-        lblColor.innerText = "T";
-        lblColor.style.fontWeight = "bold";
-        const inpColor = document.createElement("input");
-        inpColor.type = "color";
-        inpColor.title = "Couleur du texte";
-        // Convertir couleur Power BI (si hex) ou nom
-        // Note: row.colorLabel peut être un objet {solid:{color:...}} ou string
-        // Ici on suppose que c'est déjà string grâce au parsing dans update()
-        inpColor.value = (row.colorLabel && row.colorLabel.startsWith("#")) ? row.colorLabel : "#000000";
-        inpColor.onclick = (e) => e.stopPropagation();
-        inpColor.onchange = (e) => {
+        // POLICE (font-family)
+        const fontFamilyWrapper = document.createElement("div");
+        fontFamilyWrapper.className = "font-family-wrapper";
+        const lblFontFamily = document.createElement("label");
+        lblFontFamily.innerText = "Police";
+        lblFontFamily.style.marginRight = "4px";
+        fontFamilyWrapper.appendChild(lblFontFamily);
+        const selectFontFamily = document.createElement("select");
+        selectFontFamily.title = "Police";
+        const fonts = [
+            { name: "Segoe UI", value: "'Segoe UI', sans-serif" },
+            { name: "Arial", value: "Arial, sans-serif" },
+            { name: "Calibri", value: "Calibri, sans-serif" },
+            { name: "Times New Roman", value: "'Times New Roman', serif" },
+            { name: "Courier New", value: "'Courier New', monospace" }
+        ];
+        fonts.forEach(f => {
+            const opt = document.createElement("option");
+            opt.value = f.value;
+            opt.innerText = f.name;
+            if (row.font === f.value)
+                opt.selected = true;
+            selectFontFamily.appendChild(opt);
+        });
+        selectFontFamily.onchange = (e) => {
             e.stopPropagation();
-            const color = inpColor.value;
-            // Optimistic Update
-            row.colorLabel = color;
-            row.colorAmount = color;
-            if (tr.cells[0])
-                tr.cells[0].style.color = color;
-            if (tr.cells[1])
-                tr.cells[1].style.color = color;
-            updatePending({ colorLabel: color, colorAmount: color });
-            this.host.persistProperties({
-                merge: [{
-                        objectName: "styleLigne",
-                        selector: selectionId.getSelector(),
-                        properties: {
-                            fillLabel: { solid: { color: color } },
-                            fillAmount: { solid: { color: color } }
-                        }
-                    }]
-            });
+            const f = selectFontFamily.value;
+            row.font = f;
+            tr.style.fontFamily = f;
+            updatePending({ font: f });
+            persistAllProps({ fontFamily: f });
         };
-        divColor.appendChild(lblColor);
-        divColor.appendChild(inpColor);
-        this.toolbar.appendChild(divColor);
-        // COULEUR FOND
-        const divBg = document.createElement("div");
-        divBg.className = "color-picker-wrapper";
-        const lblBg = document.createElement("label");
-        lblBg.innerText = "🎨";
-        const inpBg = document.createElement("input");
-        inpBg.type = "color";
-        inpBg.title = "Couleur de fond";
-        inpBg.value = (row.bgLabel && row.bgLabel.startsWith("#")) ? row.bgLabel : "#ffffff";
-        inpBg.onclick = (e) => e.stopPropagation();
-        inpBg.onchange = (e) => {
-            e.stopPropagation();
-            const color = inpBg.value;
-            // Optimistic Update
-            row.bgLabel = color;
-            row.bgAmount = color;
-            if (tr.cells[0])
-                tr.cells[0].style.backgroundColor = color;
-            if (tr.cells[1])
-                tr.cells[1].style.backgroundColor = color;
-            updatePending({ bgLabel: color, bgAmount: color });
-            this.host.persistProperties({
-                merge: [{
-                        objectName: "styleLigne",
-                        selector: selectionId.getSelector(),
-                        properties: {
-                            bgLabel: { solid: { color: color } },
-                            bgAmount: { solid: { color: color } }
-                        }
-                    }]
-            });
-        };
-        divBg.appendChild(lblBg);
-        divBg.appendChild(inpBg);
-        this.toolbar.appendChild(divBg);
+        fontFamilyWrapper.appendChild(selectFontFamily);
+        this.toolbar.appendChild(fontFamilyWrapper);
         // BOUTON FERMER
         const btnClose = document.createElement("button");
         btnClose.className = "close-btn";
@@ -1404,7 +1336,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (visualPlugin)
 /* harmony export */ });
-/* harmony import */ var _src_visual__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(849);
+/* harmony import */ var _src_visual__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(370);
 
 var powerbiKey = "powerbi";
 var powerbi = window[powerbiKey];
