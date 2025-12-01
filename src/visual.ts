@@ -314,6 +314,63 @@ export class Visual implements IVisual {
         }, true);
         
         this.flexContainer.appendChild(addColumnDiv);
+
+        // Bouton "Supprimer toutes les colonnes vides"
+        if (maxColumnsToShow > 1) {
+            // Trouve toutes les colonnes vides (aucune ligne non masquée)
+            const emptyCols: number[] = [];
+            for (let i = 1; i <= maxColumnsToShow; i++) {
+                const colRows = this.allRowsData.filter(r => r.columnIndex === i && !r.isHidden);
+                if (colRows.length === 0) emptyCols.push(i);
+            }
+
+            if (emptyCols.length > 0) {
+                const removeColumnDiv = document.createElement("button");
+                removeColumnDiv.type = "button";
+                removeColumnDiv.className = "remove-column-button";
+                removeColumnDiv.style.display = "flex";
+                removeColumnDiv.style.alignItems = "center";
+                removeColumnDiv.style.justifyContent = "center";
+                removeColumnDiv.style.minWidth = "40px";
+                removeColumnDiv.style.cursor = "pointer";
+                removeColumnDiv.style.opacity = "0.7";
+                removeColumnDiv.style.transition = "opacity 0.2s";
+                removeColumnDiv.style.fontSize = "18px";
+                removeColumnDiv.style.color = "#c00";
+                removeColumnDiv.style.border = "2px dashed #c00";
+                removeColumnDiv.style.borderRadius = "6px";
+                removeColumnDiv.style.margin = "10px";
+                removeColumnDiv.style.padding = "12px";
+                removeColumnDiv.style.background = "transparent";
+                removeColumnDiv.style.zIndex = "1000";
+                removeColumnDiv.innerHTML = "🗑️";
+                removeColumnDiv.title = `Supprimer toutes les colonnes vides (${emptyCols.join(", ")})`;
+
+                removeColumnDiv.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+
+                    // Supprime le titre de chaque colonne vide
+                    emptyCols.forEach(col => {
+                        this.host.persistProperties({
+                            replace: [{
+                                objectName: "titresColonnes",
+                                selector: null,
+                                properties: {
+                                    ["titre" + col]: undefined
+                                }
+                            }]
+                        });
+                    });
+                };
+
+                this.flexContainer.appendChild(removeColumnDiv);
+            }
+        }
+
+    
+                
     }
 
     private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number, categories: any) {
@@ -1008,7 +1065,6 @@ export class Visual implements IVisual {
                         addBtn.style.padding = "12px";
                         addBtn.style.background = "transparent";
                         addBtn.style.zIndex = "1000";
-                        addBtn.title = "Ajouter une nouvelle colonne";
                         this.flexContainer.appendChild(addBtn);
                     }
                 }
