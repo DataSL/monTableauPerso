@@ -374,47 +374,87 @@ export class Visual implements IVisual {
 
         // Bouton "Ajouter une ligne manuelle"
         const addLineBtn = document.createElement("button");
-        addLineBtn.type = "button";
-        addLineBtn.className = "add-line-button";
-        addLineBtn.innerHTML = "+ Ligne";
-        addLineBtn.title = "Ajouter une nouvelle ligne manuelle";
-        addLineBtn.style.margin = "10px";
-        addLineBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log("[+] Bouton ligne cliqué");
+addLineBtn.type = "button";
+addLineBtn.className = "add-line-button";
+addLineBtn.innerHTML = `
+    <span style="
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    ">
+        <span style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: #e6f2ff;
+            border-radius: 50%;
+            border: 1px solid #b3d7ff;
+            color: #007acc;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+        ">+</span>
+        <span style="color:#007acc;font-size:14px;font-weight:500;">Ligne</span>
+    </span>`;
+addLineBtn.title = "Ajouter une nouvelle ligne";
+addLineBtn.style.margin = "6px";
+addLineBtn.style.padding = "2px 12px";
+addLineBtn.style.background = "white";
+addLineBtn.style.border = "1px solid #b3d7ff";
+addLineBtn.style.borderRadius = "18px";
+addLineBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+addLineBtn.style.cursor = "pointer";
+addLineBtn.style.display = "flex";
+addLineBtn.style.alignItems = "center";
+addLineBtn.style.justifyContent = "center";
+addLineBtn.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+addLineBtn.style.fontSize = "14px";
+addLineBtn.onmouseover = () => {
+    addLineBtn.style.background = "#e6f2ff";
+    addLineBtn.style.borderColor = "#007acc";
+};
+addLineBtn.onmouseout = () => {
+    addLineBtn.style.background = "white";
+    addLineBtn.style.borderColor = "#b3d7ff";
+};
+addLineBtn.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("[+] Bouton ligne cliqué");
 
-            // Trouver le prochain index disponible
-            let nextIndex = 1;
-            while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
-                nextIndex++;
+    // Trouver le prochain index disponible
+    let nextIndex = 1;
+    while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
+        nextIndex++;
+    }
+    const newKey = "manualLine" + nextIndex;
+    console.log("[+] Création de la ligne :", newKey);
+
+    this.host.persistProperties({
+        merge: [{
+            objectName: newKey,
+            selector: null,
+            properties: {
+                text: "Nouvelle Ligne " + nextIndex,
+                show: true,
+                col: 1,
+                pos: 0,
+                isHeader: false,
+                bgColor: { solid: { color: "transparent" } },
+                textColor: { solid: { color: "black" } },
+                marginTop: 0,
+                fontSize: 12,
+                bold: false,
+                italic: false
             }
-            const newKey = "manualLine" + nextIndex;
-            console.log("[+] Création de la ligne :", newKey);
+        }]
+    });
 
-            this.host.persistProperties({
-                merge: [{
-                    objectName: newKey,
-                    selector: null,
-                    properties: {
-                        text: "Nouvelle Ligne " + nextIndex,
-                        show: true,
-                        col: 1,
-                        pos: 0,
-                        isHeader: false,
-                        bgColor: { solid: { color: "transparent" } },
-                        textColor: { solid: { color: "black" } },
-                        marginTop: 0,
-                        fontSize: 12,
-                        bold: false,
-                        italic: false
-                    }
-                }]
-            });
-
-            console.log("[+] persistProperties appelé pour", newKey);
-        };
-        this.flexContainer.appendChild(addLineBtn);
+    console.log("[+] persistProperties appelé pour", newKey);
+};
+this.flexContainer.appendChild(addLineBtn);
 
         console.log("[update] manualLineKeys trouvés :", this.manualLineKeys);
                 

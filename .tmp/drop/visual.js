@@ -337,9 +337,49 @@ class Visual {
         const addLineBtn = document.createElement("button");
         addLineBtn.type = "button";
         addLineBtn.className = "add-line-button";
-        addLineBtn.innerHTML = "+ Ligne";
-        addLineBtn.title = "Ajouter une nouvelle ligne manuelle";
-        addLineBtn.style.margin = "10px";
+        addLineBtn.innerHTML = `
+    <span style="
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    ">
+        <span style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: #e6f2ff;
+            border-radius: 50%;
+            border: 1px solid #b3d7ff;
+            color: #007acc;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+        ">+</span>
+        <span style="color:#007acc;font-size:14px;font-weight:500;">Ligne</span>
+    </span>`;
+        addLineBtn.title = "Ajouter une nouvelle ligne";
+        addLineBtn.style.margin = "6px";
+        addLineBtn.style.padding = "2px 12px";
+        addLineBtn.style.background = "white";
+        addLineBtn.style.border = "1px solid #b3d7ff";
+        addLineBtn.style.borderRadius = "18px";
+        addLineBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+        addLineBtn.style.cursor = "pointer";
+        addLineBtn.style.display = "flex";
+        addLineBtn.style.alignItems = "center";
+        addLineBtn.style.justifyContent = "center";
+        addLineBtn.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+        addLineBtn.style.fontSize = "14px";
+        addLineBtn.onmouseover = () => {
+            addLineBtn.style.background = "#e6f2ff";
+            addLineBtn.style.borderColor = "#007acc";
+        };
+        addLineBtn.onmouseout = () => {
+            addLineBtn.style.background = "white";
+            addLineBtn.style.borderColor = "#b3d7ff";
+        };
         addLineBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
