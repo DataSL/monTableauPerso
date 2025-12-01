@@ -29,102 +29,6 @@
         "titre20": { "displayName": "Titre Col 20", "type": { "text": true } }
       }
     },
-    "ligneA": {
-      "displayName": "AJOUT LIGNE A",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
-    "ligneB": {
-      "displayName": "AJOUT LIGNE B",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
-    "ligneC": {
-      "displayName": "AJOUT LIGNE C",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
-    "ligneD": {
-      "displayName": "AJOUT LIGNE D",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
-    "ligneE": {
-      "displayName": "AJOUT LIGNE E",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
-    "ligneF": {
-      "displayName": "AJOUT LIGNE F",
-      "properties": {
-        "text": { "displayName": "Texte", "type": { "text": true } },
-        "show": { "displayName": "AFFICHER", "type": { "bool": true } },
-        "col": { "displayName": "Colonne", "type": { "numeric": true } },
-        "pos": { "displayName": "Position", "type": { "numeric": true } },
-        "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
-        "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } },
-        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
-        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
-        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } }
-      }
-    },
     "selectionMenu": {
       "displayName": "1. SÉLECTION (Excel)",
       "properties": {
@@ -156,6 +60,646 @@
         "bgAmount": { "displayName": "Fond Prix", "type": { "fill": { "solid": { "color": true } } } },
         "fillAmount": { "displayName": "Texte Prix", "type": { "fill": { "solid": { "color": true } } } },
         "boldAmount": { "displayName": "Gras (P)", "type": { "bool": true } }
+      }
+    },
+    "manualLine1": {
+      "displayName": "Ligne manuelle 1",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine2": {
+      "displayName": "Ligne manuelle 2",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine3": {
+      "displayName": "Ligne manuelle 3",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine4": {
+      "displayName": "Ligne manuelle 4",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine5": {
+      "displayName": "Ligne manuelle 5",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine6": {
+      "displayName": "Ligne manuelle 6",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine7": {
+      "displayName": "Ligne manuelle 7",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine8": {
+      "displayName": "Ligne manuelle 8",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine9": {
+      "displayName": "Ligne manuelle 9",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine10": {
+      "displayName": "Ligne manuelle 10",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine11": {
+      "displayName": "Ligne manuelle 11",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine12": {
+      "displayName": "Ligne manuelle 12",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine13": {
+      "displayName": "Ligne manuelle 13",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine14": {
+      "displayName": "Ligne manuelle 14",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine15": {
+      "displayName": "Ligne manuelle 15",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine16": {
+      "displayName": "Ligne manuelle 16",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine17": {
+      "displayName": "Ligne manuelle 17",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine18": {
+      "displayName": "Ligne manuelle 18",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine19": {
+      "displayName": "Ligne manuelle 19",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine20": {
+      "displayName": "Ligne manuelle 20",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine21": {
+      "displayName": "Ligne manuelle 21",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine22": {
+      "displayName": "Ligne manuelle 22",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine23": {
+      "displayName": "Ligne manuelle 23",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine24": {
+      "displayName": "Ligne manuelle 24",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine25": {
+      "displayName": "Ligne manuelle 25",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine26": {
+      "displayName": "Ligne manuelle 26",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine27": {
+      "displayName": "Ligne manuelle 27",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine28": {
+      "displayName": "Ligne manuelle 28",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine29": {
+      "displayName": "Ligne manuelle 29",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine30": {
+      "displayName": "Ligne manuelle 30",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine31": {
+      "displayName": "Ligne manuelle 31",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine32": {
+      "displayName": "Ligne manuelle 32",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine33": {
+      "displayName": "Ligne manuelle 33",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine34": {
+      "displayName": "Ligne manuelle 34",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine35": {
+      "displayName": "Ligne manuelle 35",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine36": {
+      "displayName": "Ligne manuelle 36",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine37": {
+      "displayName": "Ligne manuelle 37",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine38": {
+      "displayName": "Ligne manuelle 38",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine39": {
+      "displayName": "Ligne manuelle 39",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "manualLine40": {
+      "displayName": "Ligne manuelle 40",
+      "properties": {
+        "text": { "displayName": "Texte", "type": { "text": true } },
+        "show": { "displayName": "Afficher", "type": { "bool": true } },
+        "col": { "displayName": "Colonne", "type": { "numeric": true } },
+        "pos": { "displayName": "Position", "type": { "numeric": true } },
+        "isHeader": { "displayName": "Titre", "type": { "bool": true } },
+        "bgColor": { "displayName": "Fond", "type": { "fill": { "solid": { "color": true } } } },
+        "textColor": { "displayName": "Texte", "type": { "fill": { "solid": { "color": true } } } },
+        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
+        "bold": { "displayName": "Gras", "type": { "bool": true } },
+        "italic": { "displayName": "Italique", "type": { "bool": true } }
       }
     }
   },

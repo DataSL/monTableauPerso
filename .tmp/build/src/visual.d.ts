@@ -18,6 +18,7 @@ export declare class Visual implements IVisual {
     private metadata;
     private toolbar;
     private pendingChanges;
+    private manualLineKeys;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     private renderTableContent;

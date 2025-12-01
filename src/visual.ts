@@ -52,6 +52,9 @@ export class Visual implements IVisual {
     // On utilise 'any' pour permettre de stocker n'importe quelle propriété de RowData
     private pendingChanges: Map<string, any> = new Map();
 
+    // Clés des lignes manuelles (pour gestion dynamique)
+    private manualLineKeys: string[] = [];
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.target = options.element;
@@ -80,6 +83,7 @@ export class Visual implements IVisual {
     public update(options: VisualUpdateOptions) {
         this.flexContainer.innerHTML = "";
         this.allRowsData = [];
+        this.manualLineKeys = [];
 
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
@@ -198,40 +202,39 @@ export class Visual implements IVisual {
             });
         }
 
-        // 3. LIGNES MANUELLES
-        const manualRows = ["ligneA", "ligneB", "ligneC", "ligneD", "ligneE", "ligneF"];
-        
-        manualRows.forEach((key) => {
-            if (this.metadata && this.metadata.objects && this.metadata.objects[key]) {
-                const s = this.metadata.objects[key];
-                if (s["show"] === true) {
-                    let txt = s["text"] ? s["text"] as string : "Ligne Manuelle";
-                    let col = s["col"] ? s["col"] as number : 1;
-                    let pos = s["pos"] ? s["pos"] as number : 0;
-                    let isHead = s["isHeader"] ? s["isHeader"] as boolean : false;
-                    let bg = s["bgColor"] ? (s["bgColor"] as any).solid.color : "transparent";
-                    let color = s["textColor"] ? (s["textColor"] as any).solid.color : "black";
-                    let mt = s["marginTop"] ? s["marginTop"] as number : 0;
-                    let fs = s["fontSize"] ? s["fontSize"] as number : 12;
-                    let bo = s["bold"] ? s["bold"] as boolean : false;
-                    let it = s["italic"] ? s["italic"] as boolean : false;
+        // 3. LIGNES MANUELLES DYNAMIQUES
+        if (this.metadata && this.metadata.objects) {
+            Object.keys(this.metadata.objects).forEach(key => {
+                if (key.startsWith("manualLine")) {
+                    this.manualLineKeys.push(key);
+                    const s = this.metadata.objects[key];
+                    if (s["show"] === true) {
+                        let txt = s["text"] ? s["text"] as string : "Nouvelle Ligne";
+                        let col = s["col"] ? s["col"] as number : 1;
+                        let pos = s["pos"] ? s["pos"] as number : 0;
+                        let isHead = s["isHeader"] ? s["isHeader"] as boolean : false;
+                        let bg = s["bgColor"] ? (s["bgColor"] as any).solid.color : "transparent";
+                        let color = s["textColor"] ? (s["textColor"] as any).solid.color : "black";
+                        let mt = s["marginTop"] ? s["marginTop"] as number : 0;
+                        let fs = s["fontSize"] ? s["fontSize"] as number : 12;
+                        let bo = s["bold"] ? s["bold"] as boolean : false;
+                        let it = s["italic"] ? s["italic"] as boolean : false;
 
-                    let vRow: RowData = {
-                        originalName: key,
-                        label: txt, amount: "", 
-                        columnIndex: col, sortIndex: pos,
-                        marginBottom: 0, marginTop: mt, isHidden: false, marginColor: "transparent",
-                        isHeader: isHead, isVirtual: true, customAmount: "",
-                        font: "'Segoe UI', sans-serif", fontSize: fs,
-                        bgLabel: bg, colorLabel: color, boldLabel: bo, italicLabel: it,
-                        bgAmount: bg, colorAmount: color, boldAmount: bo
-                    };
-                    
-                    if (vRow.columnIndex > maxColumnIndexUsed) maxColumnIndexUsed = vRow.columnIndex;
-                    this.allRowsData.push(vRow);
+                        let vRow: RowData = {
+                            originalName: key,
+                            label: txt, amount: "", 
+                            columnIndex: col, sortIndex: pos,
+                            marginBottom: 0, marginTop: mt, isHidden: false, marginColor: "transparent",
+                            isHeader: isHead, isVirtual: true, customAmount: "",
+                            font: "'Segoe UI', sans-serif", fontSize: fs,
+                            bgLabel: bg, colorLabel: color, boldLabel: bo, italicLabel: it,
+                            bgAmount: bg, colorAmount: color, boldAmount: bo
+                        };
+                        this.allRowsData.push(vRow);
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // 4. RENDU
         // Déterminer le nombre maximum de colonnes à afficher (max entre données et titres)
@@ -369,7 +372,51 @@ export class Visual implements IVisual {
             }
         }
 
-    
+        // Bouton "Ajouter une ligne manuelle"
+        const addLineBtn = document.createElement("button");
+        addLineBtn.type = "button";
+        addLineBtn.className = "add-line-button";
+        addLineBtn.innerHTML = "+ Ligne";
+        addLineBtn.title = "Ajouter une nouvelle ligne manuelle";
+        addLineBtn.style.margin = "10px";
+        addLineBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[+] Bouton ligne cliqué");
+
+            // Trouver le prochain index disponible
+            let nextIndex = 1;
+            while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
+                nextIndex++;
+            }
+            const newKey = "manualLine" + nextIndex;
+            console.log("[+] Création de la ligne :", newKey);
+
+            this.host.persistProperties({
+                merge: [{
+                    objectName: newKey,
+                    selector: null,
+                    properties: {
+                        text: "Nouvelle Ligne " + nextIndex,
+                        show: true,
+                        col: 1,
+                        pos: 0,
+                        isHeader: false,
+                        bgColor: { solid: { color: "transparent" } },
+                        textColor: { solid: { color: "black" } },
+                        marginTop: 0,
+                        fontSize: 12,
+                        bold: false,
+                        italic: false
+                    }
+                }]
+            });
+
+            console.log("[+] persistProperties appelé pour", newKey);
+        };
+        this.flexContainer.appendChild(addLineBtn);
+
+        console.log("[update] manualLineKeys trouvés :", this.manualLineKeys);
                 
     }
 
@@ -1339,6 +1386,44 @@ export class Visual implements IVisual {
 
         addManualMenu("ligneA"); addManualMenu("ligneB"); addManualMenu("ligneC");
         addManualMenu("ligneD"); addManualMenu("ligneE"); addManualMenu("ligneF");
+
+        // Gérer dynamiquement toutes les lignes manuelles
+        if (this.metadata && this.metadata.objects) {
+            Object.keys(this.metadata.objects).forEach(key => {
+                if (key.startsWith("manualLine") && options.objectName === key) {
+                    let props: any = { 
+                        text: "Nouvelle Ligne", 
+                        show: false, 
+                        col: 1, 
+                        pos: 0, 
+                        isHeader: false, 
+                        bgColor: {solid:{color:"transparent"}}, 
+                        textColor: {solid:{color:"black"}}, 
+                        marginTop: 0, 
+                        fontSize: 12, 
+                        bold: false, 
+                        italic: false 
+                    };
+                    const s = this.metadata.objects[key];
+                    if (s["text"]) props.text = s["text"];
+                    if (s["show"] !== undefined) props.show = s["show"];
+                    if (s["col"]) props.col = s["col"];
+                    if (s["pos"] !== undefined) props.pos = s["pos"];
+                    if (s["isHeader"] !== undefined) props.isHeader = s["isHeader"];
+                    if (s["bgColor"]) props.bgColor = s["bgColor"];
+                    if (s["textColor"]) props.textColor = s["textColor"];
+                    if (s["marginTop"]) props.marginTop = s["marginTop"];
+                    if (s["fontSize"]) props.fontSize = s["fontSize"];
+                    if (s["bold"] !== undefined) props.bold = s["bold"];
+                    if (s["italic"] !== undefined) props.italic = s["italic"];
+                    instances.push({ 
+                        objectName: key, 
+                        selector: null,
+                        properties: props 
+                    });
+                }
+            });
+        }
 
         if (!this.categoricalData) return instances;
         const categories = this.categoricalData.categories[0];
