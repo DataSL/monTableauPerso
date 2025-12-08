@@ -621,9 +621,128 @@ class Visual {
                                             }
                                         }]
                                 });
+                                // Rafraîchir l'affichage
+                                this.flexContainer.innerHTML = "";
+                                let maxColUsed = 1;
+                                this.allRowsData.forEach(r => {
+                                    if (r.columnIndex > maxColUsed)
+                                        maxColUsed = r.columnIndex;
+                                });
+                                let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                                for (let i = 1; i <= maxColumnsToShow; i++) {
+                                    const colDiv = document.createElement("div");
+                                    colDiv.className = "dynamic-column";
+                                    const table = document.createElement("table");
+                                    colDiv.appendChild(table);
+                                    const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                                    const colTitle = this.columnTitles[i - 1] || ("COLONNE " + i);
+                                    this.renderTableContent(table, colTitle, colRows, i, categories);
+                                    this.flexContainer.appendChild(colDiv);
+                                }
                             }
                         }
-                        // CAS 2: LIGNE CLASSIQUE (Excel) ... (inchangé)
+                        // CAS 2: LIGNE CLASSIQUE (Excel)
+                        else if (categories) {
+                            const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
+                            if (draggedIndex !== -1) {
+                                const selectionId = this.host.createSelectionIdBuilder()
+                                    .withCategory(categories, draggedIndex)
+                                    .createSelectionId();
+                                const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                                let existingProps = {
+                                    marginBottom: 0, marginTop: 0, isHidden: false,
+                                    marginColor: { solid: { color: "transparent" } },
+                                    customLabel: "", customAmount: "", isHeader: false,
+                                    fontSize: 12, fontFamily: "'Segoe UI', sans-serif",
+                                    bgLabel: { solid: { color: "transparent" } },
+                                    fillLabel: { solid: { color: "black" } },
+                                    italicLabel: false, boldLabel: false,
+                                    bgAmount: { solid: { color: "transparent" } },
+                                    fillAmount: { solid: { color: "black" } },
+                                    boldAmount: false
+                                };
+                                if (currentDraggedRow) {
+                                    existingProps.marginBottom = currentDraggedRow.marginBottom;
+                                    existingProps.marginTop = currentDraggedRow.marginTop;
+                                    existingProps.isHidden = currentDraggedRow.isHidden;
+                                    existingProps.marginColor = { solid: { color: currentDraggedRow.marginColor } };
+                                    existingProps.customLabel = currentDraggedRow.customLabel || "";
+                                    existingProps.customAmount = currentDraggedRow.customAmount || "";
+                                    existingProps.isHeader = currentDraggedRow.isHeader;
+                                    existingProps.fontSize = currentDraggedRow.fontSize;
+                                    existingProps.fontFamily = currentDraggedRow.font;
+                                    existingProps.bgLabel = { solid: { color: currentDraggedRow.bgLabel } };
+                                    existingProps.fillLabel = { solid: { color: currentDraggedRow.colorLabel } };
+                                    existingProps.italicLabel = currentDraggedRow.italicLabel;
+                                    existingProps.boldLabel = currentDraggedRow.boldLabel;
+                                    existingProps.bgAmount = { solid: { color: currentDraggedRow.bgAmount } };
+                                    existingProps.fillAmount = { solid: { color: currentDraggedRow.colorAmount } };
+                                    existingProps.boldAmount = currentDraggedRow.boldAmount;
+                                }
+                                else if (categories.objects && categories.objects[draggedIndex]) {
+                                    const style = categories.objects[draggedIndex]["styleLigne"];
+                                    if (style) {
+                                        Object.keys(style).forEach(key => {
+                                            if (key !== "columnIndex" && key !== "ordreTri") {
+                                                existingProps[key] = style[key];
+                                            }
+                                        });
+                                    }
+                                }
+                                existingProps.columnIndex = colIndex;
+                                existingProps.ordreTri = newSortIndex;
+                                this.host.persistProperties({
+                                    replace: [{
+                                            objectName: "styleLigne",
+                                            selector: selectionId.getSelector(),
+                                            properties: existingProps
+                                        }]
+                                });
+                                const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                                if (draggedRowData) {
+                                    draggedRowData.columnIndex = colIndex;
+                                    draggedRowData.sortIndex = newSortIndex;
+                                    this.pendingChanges.set(draggedOriginalName, {
+                                        columnIndex: colIndex,
+                                        sortIndex: newSortIndex,
+                                        marginBottom: draggedRowData.marginBottom,
+                                        marginTop: draggedRowData.marginTop,
+                                        isHidden: draggedRowData.isHidden,
+                                        marginColor: draggedRowData.marginColor,
+                                        customLabel: draggedRowData.customLabel,
+                                        customAmount: draggedRowData.customAmount,
+                                        isHeader: draggedRowData.isHeader,
+                                        fontSize: draggedRowData.fontSize,
+                                        font: draggedRowData.font,
+                                        bgLabel: draggedRowData.bgLabel,
+                                        colorLabel: draggedRowData.colorLabel,
+                                        italicLabel: draggedRowData.italicLabel,
+                                        boldLabel: draggedRowData.boldLabel,
+                                        bgAmount: draggedRowData.bgAmount,
+                                        colorAmount: draggedRowData.colorAmount,
+                                        boldAmount: draggedRowData.boldAmount,
+                                        timestamp: Date.now()
+                                    });
+                                    this.flexContainer.innerHTML = "";
+                                    let maxColUsed = 1;
+                                    this.allRowsData.forEach(r => {
+                                        if (r.columnIndex > maxColUsed)
+                                            maxColUsed = r.columnIndex;
+                                    });
+                                    let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                                    for (let i = 1; i <= maxColumnsToShow; i++) {
+                                        const colDiv = document.createElement("div");
+                                        colDiv.className = "dynamic-column";
+                                        const table = document.createElement("table");
+                                        colDiv.appendChild(table);
+                                        const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                                        const colTitle = this.columnTitles[i - 1] || ("COLONNE " + i);
+                                        this.renderTableContent(table, colTitle, colRows, i, categories);
+                                        this.flexContainer.appendChild(colDiv);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             };
