@@ -920,121 +920,46 @@ this.flexContainer.appendChild(addLineBtn);
             dropZoneTd.style.border = "2px dashed transparent";
             dropZoneTd.style.backgroundColor = "transparent";
 
-            if (e.dataTransfer && categories) {
+            if (e.dataTransfer) {
                 const dataStr = e.dataTransfer.getData("text/plain");
                 const data = JSON.parse(dataStr);
-                const draggedLabel = data.label;
-                const draggedOriginalName = data.originalName || data.label;
-                
-                const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
-                if (draggedIndex !== -1) {
-                    const selectionId = this.host.createSelectionIdBuilder()
-                        .withCategory(categories, draggedIndex)
-                        .createSelectionId();
-                    
-                    // Récupérer les props existantes depuis allRowsData pour avoir les dernières modifs (optimistes)
+                const draggedOriginalName = data.originalName;
+                const isVirtual = data.isVirtual;
+
+                // CALCUL DE LA NOUVELLE POSITION (FIN DE COLONNE)
+                let lastSortIndex = 0;
+                if (rows.length > 0) {
+                    lastSortIndex = rows[rows.length - 1].sortIndex;
+                }
+                let newSortIndex = lastSortIndex + 10;
+
+                // CAS 1: LIGNE MANUELLE
+                if (isVirtual) {
                     const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
-
-                    let existingProps: any = {
-                        marginBottom: 0, marginTop: 0, isHidden: false, 
-                        marginColor: {solid:{color:"transparent"}},
-                        customLabel: "", customAmount: "", isHeader: false, 
-                        fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                        bgLabel: {solid:{color:"transparent"}}, 
-                        fillLabel: {solid:{color:"black"}}, 
-                        italicLabel: false, boldLabel: false,
-                        bgAmount: {solid:{color:"transparent"}}, 
-                        fillAmount: {solid:{color:"black"}}, 
-                        boldAmount: false
-                    };
-
                     if (currentDraggedRow) {
-                        existingProps.marginBottom = currentDraggedRow.marginBottom;
-                        existingProps.marginTop = currentDraggedRow.marginTop;
-                        existingProps.isHidden = currentDraggedRow.isHidden;
-                        existingProps.marginColor = { solid: { color: currentDraggedRow.marginColor } };
-                        existingProps.customLabel = currentDraggedRow.customLabel || "";
-                        existingProps.customAmount = currentDraggedRow.customAmount || "";
-                        existingProps.isHeader = currentDraggedRow.isHeader;
-                        existingProps.fontSize = currentDraggedRow.fontSize;
-                        existingProps.fontFamily = currentDraggedRow.font;
-                        existingProps.bgLabel = { solid: { color: currentDraggedRow.bgLabel } };
-                        existingProps.fillLabel = { solid: { color: currentDraggedRow.colorLabel } };
-                        existingProps.italicLabel = currentDraggedRow.italicLabel;
-                        existingProps.boldLabel = currentDraggedRow.boldLabel;
-                        existingProps.bgAmount = { solid: { color: currentDraggedRow.bgAmount } };
-                        existingProps.fillAmount = { solid: { color: currentDraggedRow.colorAmount } };
-                        existingProps.boldAmount = currentDraggedRow.boldAmount;
-                    } else if (categories.objects && categories.objects[draggedIndex]) {
-                        const style = categories.objects[draggedIndex]["styleLigne"];
-                        if (style) {
-                            Object.keys(style).forEach(key => {
-                                if (key !== "columnIndex" && key !== "ordreTri") {
-                                    existingProps[key] = style[key];
-                                }
-                            });
-                        }
-                    }
-                    
-                    // CALCUL DE LA NOUVELLE POSITION (FIN DE COLONNE)
-                    let lastSortIndex = 0;
-                    if (rows.length > 0) {
-                        lastSortIndex = rows[rows.length - 1].sortIndex;
-                    }
-                    let newSortIndex = lastSortIndex + 10;
-                    
-                    console.log(`🟢 INSERTION FIN: Après ${lastSortIndex} -> ${newSortIndex}`);
-                    
-                    console.log("🔵 DRAG (END ZONE) existingProps:", JSON.stringify(existingProps));
-                    
-                    existingProps.columnIndex = colIndex;
-                    existingProps.ordreTri = newSortIndex;
-                    
-                    console.log("🔵 DRAG (END ZONE) Final props to persist:", JSON.stringify(existingProps));
-                    
-                    const instancesToPersist: any = {
-                        merge: [{
-                            objectName: "styleLigne",
-                            selector: selectionId.getSelector(),
-                            properties: existingProps
-                        }]
-                    };
-                    
-                    console.log("🟢 PERSISTING (drag end zone):", JSON.stringify(instancesToPersist));
-                    
-                    // ⚠️ IMPORTANT: Appeler persistProperties AVANT de reconstruire le DOM
-                    this.host.persistProperties(instancesToPersist);
-                    console.log("✅ persistProperties called successfully (drop at end)");
-                    
-                    // Optimistic Update
-                    const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
-                    if (draggedRowData) {
-                        draggedRowData.columnIndex = colIndex;
-                        draggedRowData.sortIndex = newSortIndex;
-                        
-                        // IMPORTANT: Sauvegarder TOUTES les propriétés dans pendingChanges
+                        // Mettre à jour l'affichage local (optimiste)
+                        currentDraggedRow.columnIndex = colIndex;
+                        currentDraggedRow.sortIndex = newSortIndex;
+
                         this.pendingChanges.set(draggedOriginalName, {
                             columnIndex: colIndex,
                             sortIndex: newSortIndex,
-                            marginBottom: draggedRowData.marginBottom,
-                            marginTop: draggedRowData.marginTop,
-                            isHidden: draggedRowData.isHidden,
-                            marginColor: draggedRowData.marginColor,
-                            customLabel: draggedRowData.customLabel,
-                            customAmount: draggedRowData.customAmount,
-                            isHeader: draggedRowData.isHeader,
-                            fontSize: draggedRowData.fontSize,
-                            font: draggedRowData.font,
-                            bgLabel: draggedRowData.bgLabel,
-                            colorLabel: draggedRowData.colorLabel,
-                            italicLabel: draggedRowData.italicLabel,
-                            boldLabel: draggedRowData.boldLabel,
-                            bgAmount: draggedRowData.bgAmount,
-                            colorAmount: draggedRowData.colorAmount,
-                            boldAmount: draggedRowData.boldAmount,
                             timestamp: Date.now()
                         });
-                        
+
+                        // Persister pour Ligne Manuelle (propriétés 'col' et 'pos')
+                        this.host.persistProperties({
+                            merge: [{
+                                objectName: draggedOriginalName,
+                                selector: null,
+                                properties: {
+                                    col: colIndex,
+                                    pos: newSortIndex
+                                }
+                            }]
+                        });
+
+                        // Rafraîchir l'affichage
                         this.flexContainer.innerHTML = "";
                         let maxColUsed = 1;
                         this.allRowsData.forEach(r => {
@@ -1053,28 +978,123 @@ this.flexContainer.appendChild(addLineBtn);
                             this.renderTableContent(table, colTitle, colRows, i, categories);
                             this.flexContainer.appendChild(colDiv);
                         }
+                    }
+                }
+                // CAS 2: LIGNE CLASSIQUE (Excel)
+                else if (categories) {
+                    const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
+                    if (draggedIndex !== -1) {
+                        const selectionId = this.host.createSelectionIdBuilder()
+                            .withCategory(categories, draggedIndex)
+                            .createSelectionId();
                         
-                        const addBtn = document.createElement("button");
-                        addBtn.type = "button";
-                        addBtn.className = "add-column-button";
-                        addBtn.style.display = "flex";
-                        addBtn.style.alignItems = "center";
-                        addBtn.style.justifyContent = "center";
-                        addBtn.style.minWidth = "40px";
-                        addBtn.style.cursor = "pointer";
-                        addBtn.style.opacity = "0.5";
-                        addBtn.style.transition = "opacity 0.2s";
-                        addBtn.style.fontSize = "18px";
-                        addBtn.style.color = "#666";
-                        addBtn.style.border = "2px dashed #ccc";
-                        addBtn.style.borderRadius = "6px";
-                        addBtn.style.margin = "10px";
-                        addBtn.style.padding = "12px";
-                        addBtn.style.background = "transparent";
-                        addBtn.style.zIndex = "1000";
-                        addBtn.innerHTML = "➕";
-                        addBtn.title = "Ajouter une nouvelle colonne";
-                        this.flexContainer.appendChild(addBtn);
+                        const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+
+                        let existingProps: any = {
+                            marginBottom: 0, marginTop: 0, isHidden: false, 
+                            marginColor: {solid:{color:"transparent"}},
+                            customLabel: "", customAmount: "", isHeader: false, 
+                            fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                            bgLabel: {solid:{color:"transparent"}}, 
+                            fillLabel: {solid:{color:"black"}}, 
+                            italicLabel: false, boldLabel: false,
+                            bgAmount: {solid:{color:"transparent"}}, 
+                            fillAmount: {solid:{color:"black"}}, 
+                            boldAmount: false
+                        };
+
+                        if (currentDraggedRow) {
+                            existingProps.marginBottom = currentDraggedRow.marginBottom;
+                            existingProps.marginTop = currentDraggedRow.marginTop;
+                            existingProps.isHidden = currentDraggedRow.isHidden;
+                            existingProps.marginColor = { solid: { color: currentDraggedRow.marginColor } };
+                            existingProps.customLabel = currentDraggedRow.customLabel || "";
+                            existingProps.customAmount = currentDraggedRow.customAmount || "";
+                            existingProps.isHeader = currentDraggedRow.isHeader;
+                            existingProps.fontSize = currentDraggedRow.fontSize;
+                            existingProps.fontFamily = currentDraggedRow.font;
+                            existingProps.bgLabel = { solid: { color: currentDraggedRow.bgLabel } };
+                            existingProps.fillLabel = { solid: { color: currentDraggedRow.colorLabel } };
+                            existingProps.italicLabel = currentDraggedRow.italicLabel;
+                            existingProps.boldLabel = currentDraggedRow.boldLabel;
+                            existingProps.bgAmount = { solid: { color: currentDraggedRow.bgAmount } };
+                            existingProps.fillAmount = { solid: { color: currentDraggedRow.colorAmount } };
+                            existingProps.boldAmount = currentDraggedRow.boldAmount;
+                        } else if (categories.objects && categories.objects[draggedIndex]) {
+                            const style = categories.objects[draggedIndex]["styleLigne"];
+                            if (style) {
+                                Object.keys(style).forEach(key => {
+                                    if (key !== "columnIndex" && key !== "ordreTri") {
+                                        existingProps[key] = style[key];
+                                    }
+                                });
+                            }
+                        }
+                        
+                        existingProps.columnIndex = colIndex;
+                        existingProps.ordreTri = newSortIndex;
+                        
+                        console.log("🔵 DRAG (END ZONE) Final props to persist:", JSON.stringify(existingProps));
+                        
+                        const instancesToPersist: any = {
+                            merge: [{
+                                objectName: "styleLigne",
+                                selector: selectionId.getSelector(),
+                                properties: existingProps
+                            }]
+                        };
+                        
+                        console.log("🟢 PERSISTING (drag end zone):", JSON.stringify(instancesToPersist));
+                        
+                        this.host.persistProperties(instancesToPersist);
+                        console.log("✅ persistProperties called successfully (drop at end)");
+                        
+                        const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
+                        if (draggedRowData) {
+                            draggedRowData.columnIndex = colIndex;
+                            draggedRowData.sortIndex = newSortIndex;
+                            
+                            this.pendingChanges.set(draggedOriginalName, {
+                                columnIndex: colIndex,
+                                sortIndex: newSortIndex,
+                                marginBottom: draggedRowData.marginBottom,
+                                marginTop: draggedRowData.marginTop,
+                                isHidden: draggedRowData.isHidden,
+                                marginColor: draggedRowData.marginColor,
+                                customLabel: draggedRowData.customLabel,
+                                customAmount: draggedRowData.customAmount,
+                                isHeader: draggedRowData.isHeader,
+                                fontSize: draggedRowData.fontSize,
+                                font: draggedRowData.font,
+                                bgLabel: draggedRowData.bgLabel,
+                                colorLabel: draggedRowData.colorLabel,
+                                italicLabel: draggedRowData.italicLabel,
+                                boldLabel: draggedRowData.boldLabel,
+                                bgAmount: draggedRowData.bgAmount,
+                                colorAmount: draggedRowData.colorAmount,
+                                boldAmount: draggedRowData.boldAmount,
+                                timestamp: Date.now()
+                            });
+                            
+                            this.flexContainer.innerHTML = "";
+                            let maxColUsed = 1;
+                            this.allRowsData.forEach(r => {
+                                if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
+                            });
+                            let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
+                            
+                            for (let i = 1; i <= maxColumnsToShow; i++) {
+                                const colDiv = document.createElement("div");
+                                colDiv.className = "dynamic-column"; 
+                                const table = document.createElement("table");
+                                colDiv.appendChild(table);
+
+                                const colRows = this.allRowsData.filter(r => r.columnIndex === i);
+                                const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
+                                this.renderTableContent(table, colTitle, colRows, i, categories);
+                                this.flexContainer.appendChild(colDiv);
+                            }
+                        }
                     }
                 }
             }
