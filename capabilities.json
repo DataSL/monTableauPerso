@@ -705,6 +705,9 @@
   },
   "dataViewMappings": [
     {
+      "conditions": [
+        { "category": { "max": 1 } }
+      ],
       "categorical": {
         "categories": { "for": { "in": "category" } },
         "values": { "select": [ { "bind": { "to": "measure" } } ] }
