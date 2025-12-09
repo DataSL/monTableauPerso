@@ -109,7 +109,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine4": {
@@ -125,7 +127,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine5": {
@@ -141,7 +145,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine6": {
@@ -157,7 +163,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine7": {
@@ -173,7 +181,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine8": {
@@ -189,7 +199,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine9": {
@@ -205,7 +217,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine10": {
@@ -221,7 +235,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine11": {
@@ -237,7 +253,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine12": {
@@ -253,7 +271,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine13": {
@@ -269,7 +289,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine14": {
@@ -285,7 +307,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine15": {
@@ -301,7 +325,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine16": {
@@ -317,7 +343,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine17": {
@@ -333,7 +361,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine18": {
@@ -349,7 +379,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine19": {
@@ -365,7 +397,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine20": {
@@ -381,7 +415,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine21": {
@@ -397,7 +433,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine22": {
@@ -413,7 +451,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine23": {
@@ -429,7 +469,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine24": {
@@ -445,7 +487,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine25": {
@@ -461,7 +505,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine26": {
@@ -477,7 +523,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine27": {
@@ -493,7 +541,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine28": {
@@ -509,7 +559,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine29": {
@@ -525,7 +577,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine30": {
@@ -541,7 +595,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine31": {
@@ -557,7 +613,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine32": {
@@ -573,7 +631,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine33": {
@@ -589,7 +649,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine34": {
@@ -605,7 +667,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine35": {
@@ -621,7 +685,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine36": {
@@ -637,7 +703,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine37": {
@@ -653,7 +721,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine38": {
@@ -669,7 +739,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine39": {
@@ -685,7 +757,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine40": {
@@ -701,7 +775,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "tableBorders": {

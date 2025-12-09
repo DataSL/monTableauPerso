@@ -1214,56 +1214,6 @@ class Visual {
         const sep1 = document.createElement("div");
         sep1.className = "separator";
         this.toolbar.appendChild(sep1);
-        // COULEUR FOND LIBELLÉ
-        const colorBgLabelWrapper = document.createElement("div");
-        colorBgLabelWrapper.className = "color-picker-wrapper";
-        const lblBgLabel = document.createElement("label");
-        lblBgLabel.innerText = "Fond";
-        colorBgLabelWrapper.appendChild(lblBgLabel);
-        const colorBgLabel = document.createElement("input");
-        colorBgLabel.type = "color";
-        colorBgLabel.value = row.bgLabel === "transparent" ? "#ffffff" : row.bgLabel;
-        colorBgLabel.onchange = (e) => {
-            e.stopPropagation();
-            const newColor = colorBgLabel.value;
-            row.bgLabel = newColor;
-            row.bgAmount = newColor;
-            if (tr.cells[0])
-                tr.cells[0].style.backgroundColor = newColor;
-            if (tr.cells[1])
-                tr.cells[1].style.backgroundColor = newColor;
-            updatePending({ bgLabel: newColor, bgAmount: newColor });
-            persistAllProps({ bgLabel: { solid: { color: newColor } }, bgAmount: { solid: { color: newColor } } });
-        };
-        colorBgLabelWrapper.appendChild(colorBgLabel);
-        this.toolbar.appendChild(colorBgLabelWrapper);
-        // COULEUR TEXTE LIBELLÉ
-        const colorTextLabelWrapper = document.createElement("div");
-        colorTextLabelWrapper.className = "color-picker-wrapper";
-        const lblTextLabel = document.createElement("label");
-        lblTextLabel.innerText = "Texte";
-        colorTextLabelWrapper.appendChild(lblTextLabel);
-        const colorTextLabel = document.createElement("input");
-        colorTextLabel.type = "color";
-        colorTextLabel.value = row.colorLabel === "black" ? "#000000" : row.colorLabel;
-        colorTextLabel.onchange = (e) => {
-            e.stopPropagation();
-            const newColor = colorTextLabel.value;
-            row.colorLabel = newColor;
-            row.colorAmount = newColor;
-            if (tr.cells[0])
-                tr.cells[0].style.color = newColor;
-            if (tr.cells[1])
-                tr.cells[1].style.color = newColor;
-            updatePending({ colorLabel: newColor, colorAmount: newColor });
-            persistAllProps({ fillLabel: { solid: { color: newColor } }, fillAmount: { solid: { color: newColor } } });
-        };
-        colorTextLabelWrapper.appendChild(colorTextLabel);
-        this.toolbar.appendChild(colorTextLabelWrapper);
-        // SEPARATEUR
-        const sep2 = document.createElement("div");
-        sep2.className = "separator";
-        this.toolbar.appendChild(sep2);
         // TAILLE POLICE (sélecteur)
         const fontSizeWrapper = document.createElement("div");
         fontSizeWrapper.className = "font-size-wrapper";
