@@ -26,6 +26,11 @@ class Visual {
     manualLineKeys = [];
     // NOUVEAU: État pour masquer/afficher les boutons
     areActionButtonsVisible = true;
+    // NOUVEAU: Bordures globales du tableau
+    tableBorderWidth = 1;
+    tableBorderColor = "rgba(0, 0, 0, 0.25)";
+    tableBorderStyle = "solid";
+    tableBorderRadius = 8;
     constructor(options) {
         this.host = options.host;
         this.target = options.element;
@@ -53,6 +58,18 @@ class Visual {
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
+        // NOUVEAU: Charger les bordures globales
+        if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
+            const tb = this.metadata.objects["tableBorders"];
+            if (tb["borderWidth"] !== undefined)
+                this.tableBorderWidth = tb["borderWidth"];
+            if (tb["borderColor"])
+                this.tableBorderColor = tb["borderColor"].solid.color;
+            if (tb["borderStyle"])
+                this.tableBorderStyle = tb["borderStyle"];
+            if (tb["borderRadius"] !== undefined)
+                this.tableBorderRadius = tb["borderRadius"];
+        }
         // 1. TITRES - Initialisation dynamique
         this.columnTitles = [];
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
@@ -87,7 +104,10 @@ class Visual {
                     isHeader: false, isVirtual: false, customAmount: "",
                     font: "'Segoe UI', sans-serif", fontSize: 12,
                     bgLabel: "transparent", colorLabel: "black", boldLabel: false, italicLabel: false,
-                    bgAmount: "transparent", colorAmount: "black", boldAmount: false
+                    bgAmount: "transparent", colorAmount: "black", boldAmount: false,
+                    // SIMPLIFIÉ: Bordures
+                    borderWidth: 1,
+                    borderColor: "#eee"
                 };
                 if (categories.objects && categories.objects[index]) {
                     const object = categories.objects[index];
@@ -132,6 +152,11 @@ class Visual {
                             row.colorAmount = style["fillAmount"].solid.color;
                         if (style["boldAmount"] !== undefined)
                             row.boldAmount = style["boldAmount"];
+                        // SIMPLIFIÉ: Charger les bordures
+                        if (style["borderWidth"] !== undefined)
+                            row.borderWidth = style["borderWidth"];
+                        if (style["borderColor"])
+                            row.borderColor = style["borderColor"].solid.color;
                     }
                 }
                 // Appliquer les changements en attente (optimiste)
@@ -202,7 +227,10 @@ class Visual {
                             isHeader: isHead, isVirtual: true, customAmount: "",
                             font: "'Segoe UI', sans-serif", fontSize: fs,
                             bgLabel: bg, colorLabel: color, boldLabel: bo, italicLabel: it,
-                            bgAmount: bg, colorAmount: color, boldAmount: bo
+                            bgAmount: bg, colorAmount: color, boldAmount: bo,
+                            // SIMPLIFIÉ: Bordures
+                            borderWidth: 1,
+                            borderColor: "#eee"
                         };
                         this.allRowsData.push(vRow);
                     }
@@ -211,6 +239,9 @@ class Visual {
         }
         // 4. RENDU
         let maxColumnsToShow = Math.max(maxColumnIndexUsed, this.columnTitles.length);
+        // Appliquer les bordures globales au conteneur
+        this.flexContainer.style.border = `${this.tableBorderWidth}px ${this.tableBorderStyle} ${this.tableBorderColor}`;
+        this.flexContainer.style.borderRadius = `${this.tableBorderRadius}px`;
         for (let i = 1; i <= maxColumnsToShow; i++) {
             const colDiv = document.createElement("div");
             colDiv.className = "dynamic-column";
@@ -831,6 +862,10 @@ class Visual {
                 tdName.style.fontWeight = "bold";
             if (row.italicLabel)
                 tdName.style.fontStyle = "italic";
+            // SIMPLIFIÉ: Bordure complète de ligne (pas de séparation label/prix)
+            const borderStyle = `${row.borderWidth}px solid ${row.borderColor}`;
+            tdName.style.border = borderStyle;
+            tdName.style.borderRight = "none"; // Pas de bordure entre label et prix
             tr.appendChild(tdName);
             const tdAmount = document.createElement("td");
             tdAmount.innerText = finalAmount;
@@ -839,6 +874,9 @@ class Visual {
             tdAmount.style.color = row.colorAmount;
             if (row.boldAmount)
                 tdAmount.style.fontWeight = "bold";
+            // Même bordure sur les 4 côtés
+            tdAmount.style.border = borderStyle;
+            tdAmount.style.borderLeft = "none"; // Pas de bordure entre label et prix
             tr.appendChild(tdAmount);
             tbody.appendChild(tr);
             if (row.marginBottom > 0) {
@@ -1106,13 +1144,14 @@ class Visual {
                 boldLabel: currentRow.boldLabel,
                 bgAmount: { solid: { color: currentRow.bgAmount } },
                 fillAmount: { solid: { color: currentRow.colorAmount } },
-                boldAmount: currentRow.boldAmount
+                boldAmount: currentRow.boldAmount,
+                // SIMPLIFIÉ: Bordures
+                borderWidth: currentRow.borderWidth,
+                borderColor: { solid: { color: currentRow.borderColor } }
             };
-            // Appliquer les surcharges
             Object.keys(overrides).forEach(key => {
                 fullProps[key] = overrides[key];
             });
-            console.log("🟢 Persisting ALL props:", JSON.stringify(fullProps));
             this.host.persistProperties({
                 replace: [{
                         objectName: "styleLigne",
@@ -1230,6 +1269,19 @@ class Visual {
         };
         fontFamilyWrapper.appendChild(selectFontFamily);
         this.toolbar.appendChild(fontFamilyWrapper);
+        // SEPARATEUR
+        const sep3 = document.createElement("div");
+        sep3.className = "separator";
+        this.toolbar.appendChild(sep3);
+        // SIMPLIFIÉ: Bouton BORDURES
+        const btnBorders = document.createElement("button");
+        btnBorders.innerHTML = "🔲";
+        btnBorders.title = "Personnaliser les bordures";
+        btnBorders.onclick = (e) => {
+            e.stopPropagation();
+            this.showBordersMenu(row, tr, selectionId);
+        };
+        this.toolbar.appendChild(btnBorders);
         // BOUTON FERMER
         const btnClose = document.createElement("button");
         btnClose.className = "close-btn";
@@ -1240,8 +1292,132 @@ class Visual {
         };
         this.toolbar.appendChild(btnClose);
     }
+    // SIMPLIFIÉ: Menu de bordures
+    showBordersMenu(row, tr, selectionId) {
+        const menu = document.createElement("div");
+        menu.className = "borders-menu";
+        menu.style.position = "fixed";
+        menu.style.zIndex = "10001";
+        menu.style.background = "white";
+        menu.style.border = "1px solid #e0e0e0";
+        menu.style.borderRadius = "6px";
+        menu.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+        menu.style.padding = "16px";
+        menu.style.display = "flex";
+        menu.style.flexDirection = "column";
+        menu.style.gap = "12px";
+        menu.style.width = "250px";
+        const title = document.createElement("div");
+        title.innerText = "Bordure de ligne";
+        title.style.fontWeight = "bold";
+        title.style.marginBottom = "8px";
+        title.style.fontSize = "14px";
+        menu.appendChild(title);
+        // Largeur
+        const widthWrapper = document.createElement("div");
+        widthWrapper.style.display = "flex";
+        widthWrapper.style.flexDirection = "column";
+        widthWrapper.style.gap = "6px";
+        const widthLabel = document.createElement("label");
+        widthLabel.innerText = "Largeur (px)";
+        widthLabel.style.fontSize = "12px";
+        widthLabel.style.fontWeight = "500";
+        widthWrapper.appendChild(widthLabel);
+        const widthInput = document.createElement("input");
+        widthInput.type = "number";
+        widthInput.min = "0";
+        widthInput.max = "10";
+        widthInput.value = row.borderWidth.toString();
+        widthInput.style.padding = "6px";
+        widthInput.style.border = "1px solid #ddd";
+        widthInput.style.borderRadius = "4px";
+        widthInput.onchange = () => {
+            const val = parseInt(widthInput.value, 10);
+            row.borderWidth = val;
+            this.updateBorder(row, tr, selectionId);
+        };
+        widthWrapper.appendChild(widthInput);
+        menu.appendChild(widthWrapper);
+        // Couleur
+        const colorWrapper = document.createElement("div");
+        colorWrapper.style.display = "flex";
+        colorWrapper.style.flexDirection = "column";
+        colorWrapper.style.gap = "6px";
+        const colorLabel = document.createElement("label");
+        colorLabel.innerText = "Couleur";
+        colorLabel.style.fontSize = "12px";
+        colorLabel.style.fontWeight = "500";
+        colorWrapper.appendChild(colorLabel);
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = row.borderColor;
+        colorInput.style.width = "100%";
+        colorInput.style.height = "36px";
+        colorInput.style.border = "1px solid #ddd";
+        colorInput.style.borderRadius = "4px";
+        colorInput.style.cursor = "pointer";
+        colorInput.onchange = () => {
+            row.borderColor = colorInput.value;
+            this.updateBorder(row, tr, selectionId);
+        };
+        colorWrapper.appendChild(colorInput);
+        menu.appendChild(colorWrapper);
+        // Bouton Fermer
+        const closeBtn = document.createElement("button");
+        closeBtn.innerText = "Fermer";
+        closeBtn.style.marginTop = "8px";
+        closeBtn.style.padding = "8px";
+        closeBtn.style.cursor = "pointer";
+        closeBtn.style.background = "#f5f5f5";
+        closeBtn.style.border = "1px solid #ddd";
+        closeBtn.style.borderRadius = "4px";
+        closeBtn.onclick = () => document.body.removeChild(menu);
+        menu.appendChild(closeBtn);
+        // Position
+        const rect = tr.getBoundingClientRect();
+        menu.style.left = (rect.right + 10) + "px";
+        menu.style.top = rect.top + "px";
+        document.body.appendChild(menu);
+    }
+    // SIMPLIFIÉ: Mise à jour bordures
+    updateBorder(row, tr, selectionId) {
+        const tdName = tr.cells[0];
+        const tdAmount = tr.cells[1];
+        const borderStyle = `${row.borderWidth}px solid ${row.borderColor}`;
+        if (tdName) {
+            tdName.style.border = borderStyle;
+            tdName.style.borderRight = "none";
+        }
+        if (tdAmount) {
+            tdAmount.style.border = borderStyle;
+            tdAmount.style.borderLeft = "none";
+        }
+        this.host.persistProperties({
+            replace: [{
+                    objectName: "styleLigne",
+                    selector: selectionId.getSelector(),
+                    properties: {
+                        borderWidth: row.borderWidth,
+                        borderColor: { solid: { color: row.borderColor } }
+                    }
+                }]
+        });
+    }
     enumerateObjectInstances(options) {
         const instances = [];
+        // NOUVEAU: Bordures globales du tableau
+        if (options.objectName === "tableBorders") {
+            instances.push({
+                objectName: "tableBorders",
+                selector: null,
+                properties: {
+                    borderWidth: this.tableBorderWidth,
+                    borderColor: { solid: { color: this.tableBorderColor } },
+                    borderStyle: this.tableBorderStyle,
+                    borderRadius: this.tableBorderRadius
+                }
+            });
+        }
         if (options.objectName === "titresColonnes") {
             const props = {};
             // Retourner tous les titres existants
@@ -1360,15 +1536,16 @@ class Visual {
             const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
             if (indexChoisi !== -1) {
                 const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
-                // Récupérer les données de la ligne actuelle (avec optimistic updates)
                 const rowData = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
                 let props = {
                     columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: { solid: { color: "transparent" } },
                     customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif",
                     bgLabel: { solid: { color: "transparent" } }, fillLabel: { solid: { color: "black" } }, italicLabel: false, boldLabel: false,
-                    bgAmount: { solid: { color: "transparent" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false
+                    bgAmount: { solid: { color: "transparent" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false,
+                    // SIMPLIFIÉ: Bordures
+                    borderWidth: 1,
+                    borderColor: { solid: { color: "#eee" } }
                 };
-                // D'abord charger depuis la BD si disponible
                 if (categories.objects && categories.objects[indexChoisi]) {
                     const style = categories.objects[indexChoisi]["styleLigne"];
                     if (style) {
@@ -1384,33 +1561,8 @@ class Visual {
                             props.isHidden = style["isHidden"];
                         if (style["marginColor"])
                             props.marginColor = style["marginColor"];
-                        if (style["customLabel"])
-                            props.customLabel = style["customLabel"];
-                        if (style["customAmount"])
-                            props.customAmount = style["customAmount"];
-                        if (style["isHeader"])
-                            props.isHeader = style["isHeader"];
-                        if (style["fontSize"])
-                            props.fontSize = style["fontSize"];
-                        if (style["fontFamily"])
-                            props.fontFamily = style["fontFamily"];
-                        if (style["bgLabel"])
-                            props.bgLabel = style["bgLabel"];
-                        if (style["fillLabel"])
-                            props.fillLabel = style["fillLabel"];
-                        if (style["boldLabel"] !== undefined)
-                            props.boldLabel = style["boldLabel"];
-                        if (style["italicLabel"] !== undefined)
-                            props.italicLabel = style["italicLabel"];
-                        if (style["bgAmount"])
-                            props.bgAmount = style["bgAmount"];
-                        if (style["fillAmount"])
-                            props.fillAmount = style["fillAmount"];
-                        if (style["boldAmount"] !== undefined)
-                            props.boldAmount = style["boldAmount"];
                     }
                 }
-                // Ensuite ÉCRASER avec les données optimistes de rowData (qui inclut les pendingChanges)
                 if (rowData) {
                     props.columnIndex = rowData.columnIndex;
                     props.ordreTri = rowData.sortIndex;
@@ -1430,6 +1582,8 @@ class Visual {
                     props.bgAmount = { solid: { color: rowData.bgAmount } };
                     props.fillAmount = { solid: { color: rowData.colorAmount } };
                     props.boldAmount = rowData.boldAmount;
+                    props.borderWidth = rowData.borderWidth;
+                    props.borderColor = { solid: { color: rowData.borderColor } };
                 }
                 instances.push({ objectName: "styleLigne", selector: selectionId.getSelector(), properties: props });
             }

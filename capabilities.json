@@ -45,11 +45,7 @@
         "isHidden": { "displayName": "MASQUER", "type": { "bool": true } },
         "marginColor": { "displayName": "Couleur Marge", "type": { "fill": { "solid": { "color": true } } } },
         "customLabel": { "displayName": "Renommer", "type": { "text": true } },
-        "customAmount": { 
-            "displayName": "Remplacer Montant", 
-            "description": "Ecrivez la valeur exacte à afficher (ex: '450 000 €')",
-            "type": { "text": true } 
-        },
+        "customAmount": { "displayName": "Remplacer Montant", "type": { "text": true } },
         "isHeader": { "displayName": "Mode Titre", "type": { "bool": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "fontFamily": { "displayName": "Police", "type": { "formatting": { "fontFamily": true } } },
@@ -59,7 +55,9 @@
         "italicLabel": { "displayName": "Italique (L)", "type": { "bool": true } },
         "bgAmount": { "displayName": "Fond Prix", "type": { "fill": { "solid": { "color": true } } } },
         "fillAmount": { "displayName": "Texte Prix", "type": { "fill": { "solid": { "color": true } } } },
-        "boldAmount": { "displayName": "Gras (P)", "type": { "bool": true } }
+        "boldAmount": { "displayName": "Gras (P)", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine1": {
@@ -700,6 +698,25 @@
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
         "italic": { "displayName": "Italique", "type": { "bool": true } }
+      }
+    },
+    "tableBorders": {
+      "displayName": "🔲 BORDURES TABLEAU",
+      "properties": {
+        "borderWidth": { "displayName": "Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "Couleur", "type": { "fill": { "solid": { "color": true } } } },
+        "borderStyle": { 
+          "displayName": "Style", 
+          "type": { 
+            "enumeration": [
+              { "value": "solid", "displayName": "Plein" },
+              { "value": "dashed", "displayName": "Tirets" },
+              { "value": "dotted", "displayName": "Pointillés" },
+              { "value": "double", "displayName": "Double" }
+            ]
+          } 
+        },
+        "borderRadius": { "displayName": "Arrondi", "type": { "numeric": true } }
       }
     }
   },

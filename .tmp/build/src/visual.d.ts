@@ -20,9 +20,15 @@ export declare class Visual implements IVisual {
     private pendingChanges;
     private manualLineKeys;
     private areActionButtonsVisible;
+    private tableBorderWidth;
+    private tableBorderColor;
+    private tableBorderStyle;
+    private tableBorderRadius;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     private renderTableContent;
     private showToolbar;
+    private showBordersMenu;
+    private updateBorder;
     enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;
 }

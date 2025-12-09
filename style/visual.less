@@ -3,24 +3,17 @@
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 5px; /* Ajout d'un petit padding pour ne pas coller aux bords de Power BI */
+    padding: 5px;
 }
 
-/* C'EST ICI QUE ÇA SE PASSE */
 .accounting-container {
     display: flex;
     flex-direction: row;
     width: 100%;
     align-items: flex-start;
-
-    /* --- ARRONDI ET BORDURE --- */
-    border-radius: 8px;       /* Coins arrondis */
-    overflow: hidden;         /* Coupe ce qui dépasse */
-    
-    /* MODIFICATION ICI : Noir (0,0,0) avec 25% d'opacité (0.25) */
+    border-radius: 8px;
+    overflow: visible; /* CHANGÉ: permet de voir toutes les bordures */
     border: 1px solid rgba(0, 0, 0, 0.25); 
-    
-    /* Optionnel : Ombre très légère pour détacher du fond blanc */
     box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
 }
 
@@ -28,19 +21,16 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #ccc;
     min-width: 0;
-}
-
-.dynamic-column:last-child {
-    border-right: none;
+    /* SUPPRIMÉ: toutes les règles border-right */
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate; /* CHANGÉ: permet de voir les bordures individuelles */
+    border-spacing: 0; /* Garde les cellules collées */
     font-family: 'Segoe UI', sans-serif;
-    table-layout: fixed; /* Important pour que le texte revienne à la ligne */
+    table-layout: fixed;
 }
 
 thead th {
@@ -52,22 +42,19 @@ thead th {
     text-transform: uppercase;
     font-size: 14px;
     text-align: center;
-    padding: 5px; /* Un peu de padding pour les titres */
+    padding: 5px;
     min-height: 40px;
-    /* border-bottom: 3px solid #eea20e;  <-- J'AI SUPPRIMÉ CETTE LIGNE (Barre Jaune) */
     overflow: hidden;
-    white-space: normal; /* Autorise le titre sur 2 lignes si besoin */
+    white-space: normal;
 }
 
 td {
     padding: 4px 8px;
-    border-bottom: 1px solid #eee;
-    
-    /* --- MODIFICATION POUR TEXTE SUR 1 LIGNE AVEC ... --- */
     white-space: nowrap; 
     overflow: hidden; 
     text-overflow: ellipsis;
     vertical-align: middle;
+    /* SUPPRIMÉ: border-bottom par défaut */
 }
 
 .floating-toolbar {
@@ -136,6 +123,13 @@ td {
         color: #999;
         &:hover { color: #cc0000; background: none; }
     }
+}
+
+.borders-menu {
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-track { background: #f1f1f1; }
+    &::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+    &::-webkit-scrollbar-thumb:hover { background: #555; }
 }
 
 @keyframes fadeIn {
