@@ -48,12 +48,11 @@ export class Visual implements IVisual {
     private metadata: any;
     private toolbar: HTMLDivElement;
     
-    // Stocker les changements en attente pour éviter le scintillement
-    // On utilise 'any' pour permettre de stocker n'importe quelle propriété de RowData
     private pendingChanges: Map<string, any> = new Map();
-
-    // Clés des lignes manuelles (pour gestion dynamique)
     private manualLineKeys: string[] = [];
+    
+    // NOUVEAU: État pour masquer/afficher les boutons
+    private areActionButtonsVisible: boolean = true;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -65,13 +64,11 @@ export class Visual implements IVisual {
         this.flexContainer.className = "accounting-container";
         this.divContainer.appendChild(this.flexContainer);
 
-        // Initialiser la toolbar (cachée par défaut)
         this.toolbar = document.createElement("div");
         this.toolbar.className = "floating-toolbar";
         this.toolbar.style.display = "none";
-        document.body.appendChild(this.toolbar); // Append to body to float over everything
+        document.body.appendChild(this.toolbar);
         
-        // Fermer la toolbar si on clique ailleurs
         document.addEventListener("mousedown", (e) => {
             if (this.toolbar.style.display !== "none" && 
                 !this.toolbar.contains(e.target as Node)) {
@@ -237,7 +234,6 @@ export class Visual implements IVisual {
         }
 
         // 4. RENDU
-        // Déterminer le nombre maximum de colonnes à afficher (max entre données et titres)
         let maxColumnsToShow = Math.max(maxColumnIndexUsed, this.columnTitles.length);
         
         for (let i = 1; i <= maxColumnsToShow; i++) {
@@ -248,17 +244,66 @@ export class Visual implements IVisual {
 
             const colRows = this.allRowsData.filter(r => r.columnIndex === i);
             const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
-            // On passe l'index de colonne (1-based) pour le renommage et categories pour le drag&drop
             const categories = this.categoricalData ? this.categoricalData.categories[0] : null;
             this.renderTableContent(table, colTitle, colRows, i, categories);
             this.flexContainer.appendChild(colDiv);
         }
         
+        // NOUVEAU: Bouton flèche pour masquer/afficher
+        const toggleBtn = document.createElement("button");
+        toggleBtn.type = "button";
+        toggleBtn.className = "toggle-actions-button";
+        toggleBtn.innerHTML = this.areActionButtonsVisible ? "◀" : "▶";
+        toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
+        toggleBtn.style.display = "flex";
+        toggleBtn.style.alignItems = "center";
+        toggleBtn.style.justifyContent = "center";
+        toggleBtn.style.minWidth = "32px";
+        toggleBtn.style.height = "32px";
+        toggleBtn.style.cursor = "pointer";
+        toggleBtn.style.fontSize = "16px";
+        toggleBtn.style.color = "#007acc";
+        toggleBtn.style.border = "1px solid #b3d7ff";
+        toggleBtn.style.borderRadius = "50%";
+        toggleBtn.style.margin = "6px";
+        toggleBtn.style.background = "white";
+        toggleBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
+        toggleBtn.style.transition = "all 0.2s";
+        toggleBtn.style.zIndex = "1000";
+        
+        toggleBtn.onmouseover = () => { 
+            toggleBtn.style.background = "#e6f2ff";
+            toggleBtn.style.borderColor = "#007acc";
+            toggleBtn.style.transform = "scale(1.1)";
+        };
+        toggleBtn.onmouseout = () => { 
+            toggleBtn.style.background = "white";
+            toggleBtn.style.borderColor = "#b3d7ff";
+            toggleBtn.style.transform = "scale(1)";
+        };
+        
+        toggleBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.areActionButtonsVisible = !this.areActionButtonsVisible;
+            toggleBtn.innerHTML = this.areActionButtonsVisible ? "◀" : "▶";
+            toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
+            
+            // Afficher/masquer les boutons
+            addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+            addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
+            if (removeColumnDiv) {
+                removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+            }
+        };
+        
+        this.flexContainer.appendChild(toggleBtn);
+        
         // Bouton "Ajouter une colonne"
         const addColumnDiv = document.createElement("button");
         addColumnDiv.type = "button";
         addColumnDiv.className = "add-column-button";
-        addColumnDiv.style.display = "flex";
+        addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
         addColumnDiv.style.alignItems = "center";
         addColumnDiv.style.justifyContent = "center";
         addColumnDiv.style.minWidth = "40px";
@@ -293,8 +338,6 @@ export class Visual implements IVisual {
             const newIndex = this.columnTitles.length + 1;
             const newTitle = "COLONNE " + newIndex;
             
-            console.log("Ajout colonne:", newIndex, newTitle); // Debug
-            
             this.host.persistProperties({
                 merge: [{
                     objectName: "titresColonnes",
@@ -319,8 +362,8 @@ export class Visual implements IVisual {
         this.flexContainer.appendChild(addColumnDiv);
 
         // Bouton "Supprimer toutes les colonnes vides"
+        let removeColumnDiv: HTMLButtonElement | null = null;
         if (maxColumnsToShow > 1) {
-            // Trouve toutes les colonnes vides (aucune ligne non masquée)
             const emptyCols: number[] = [];
             for (let i = 1; i <= maxColumnsToShow; i++) {
                 const colRows = this.allRowsData.filter(r => r.columnIndex === i && !r.isHidden);
@@ -328,10 +371,10 @@ export class Visual implements IVisual {
             }
 
             if (emptyCols.length > 0) {
-                const removeColumnDiv = document.createElement("button");
+                removeColumnDiv = document.createElement("button");
                 removeColumnDiv.type = "button";
                 removeColumnDiv.className = "remove-column-button";
-                removeColumnDiv.style.display = "flex";
+                removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
                 removeColumnDiv.style.alignItems = "center";
                 removeColumnDiv.style.justifyContent = "center";
                 removeColumnDiv.style.minWidth = "40px";
@@ -354,7 +397,6 @@ export class Visual implements IVisual {
                     e.stopPropagation();
                     e.stopImmediatePropagation();
 
-                    // Supprime le titre de chaque colonne vide
                     emptyCols.forEach(col => {
                         this.host.persistProperties({
                             replace: [{
@@ -376,6 +418,7 @@ export class Visual implements IVisual {
         const addLineBtn = document.createElement("button");
 addLineBtn.type = "button";
 addLineBtn.className = "add-line-button";
+addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
 addLineBtn.innerHTML = `
     <span style="
         display: flex;
@@ -406,7 +449,6 @@ addLineBtn.style.border = "1px solid #b3d7ff";
 addLineBtn.style.borderRadius = "18px";
 addLineBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
 addLineBtn.style.cursor = "pointer";
-addLineBtn.style.display = "flex";
 addLineBtn.style.alignItems = "center";
 addLineBtn.style.justifyContent = "center";
 addLineBtn.style.fontFamily = "'Segoe UI', Arial, sans-serif";
@@ -455,9 +497,6 @@ addLineBtn.onclick = (e) => {
     console.log("[+] persistProperties appelé pour", newKey);
 };
 this.flexContainer.appendChild(addLineBtn);
-
-        console.log("[update] manualLineKeys trouvés :", this.manualLineKeys);
-                
     }
 
     private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number, categories: any) {
