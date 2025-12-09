@@ -125,9 +125,9 @@ class Visual {
                             row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined)
                             row.sortIndex = style["ordreTri"];
-                        if (style["marginBottom"])
+                        if (style["marginBottom"] !== undefined)
                             row.marginBottom = style["marginBottom"];
-                        if (style["marginTop"])
+                        if (style["marginTop"] !== undefined)
                             row.marginTop = style["marginTop"];
                         if (style["isHidden"])
                             row.isHidden = style["isHidden"];
@@ -617,10 +617,15 @@ class Visual {
             if (row.marginTop > 0) {
                 const trSp = document.createElement("tr");
                 trSp.style.height = row.marginTop + "px";
+                trSp.style.lineHeight = "0";
+                trSp.style.fontSize = "0";
                 const tdSp = document.createElement("td");
                 tdSp.colSpan = 2;
                 tdSp.style.backgroundColor = row.marginColor;
                 tdSp.style.border = "none";
+                tdSp.style.padding = "0";
+                tdSp.style.margin = "0";
+                tdSp.style.height = row.marginTop + "px";
                 trSp.appendChild(tdSp);
                 tbody.appendChild(trSp);
             }
@@ -893,10 +898,15 @@ class Visual {
             if (row.marginBottom > 0) {
                 const trSpB = document.createElement("tr");
                 trSpB.style.height = row.marginBottom + "px";
+                trSpB.style.lineHeight = "0";
+                trSpB.style.fontSize = "0";
                 const tdSpB = document.createElement("td");
                 tdSpB.colSpan = 2;
                 tdSpB.style.backgroundColor = row.marginColor;
                 tdSpB.style.border = "none";
+                tdSpB.style.padding = "0";
+                tdSpB.style.margin = "0";
+                tdSpB.style.height = row.marginBottom + "px";
                 trSpB.appendChild(tdSpB);
                 tbody.appendChild(trSpB);
             }

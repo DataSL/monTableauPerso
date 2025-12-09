@@ -163,8 +163,8 @@ export class Visual implements IVisual {
                         if (row.columnIndex < 1) row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined) row.sortIndex = style["ordreTri"] as number;
                         
-                        if (style["marginBottom"]) row.marginBottom = style["marginBottom"] as number;
-                        if (style["marginTop"]) row.marginTop = style["marginTop"] as number;
+                        if (style["marginBottom"] !== undefined) row.marginBottom = style["marginBottom"] as number;
+                        if (style["marginTop"] !== undefined) row.marginTop = style["marginTop"] as number;
                         if (style["isHidden"]) row.isHidden = style["isHidden"] as boolean;
                         if (style["marginColor"]) row.marginColor = (style["marginColor"] as any).solid.color;
                         if (style["customLabel"]) row.label = style["customLabel"] as string;
@@ -682,9 +682,17 @@ this.flexContainer.appendChild(addLineBtn);
             if (row.marginTop > 0) {
                 const trSp = document.createElement("tr");
                 trSp.style.height = row.marginTop + "px";
+                trSp.style.lineHeight = "0";
+                trSp.style.fontSize = "0";
                 const tdSp = document.createElement("td");
-                tdSp.colSpan = 2; tdSp.style.backgroundColor = row.marginColor; tdSp.style.border = "none";
-                trSp.appendChild(tdSp); tbody.appendChild(trSp);
+                tdSp.colSpan = 2; 
+                tdSp.style.backgroundColor = row.marginColor; 
+                tdSp.style.border = "none";
+                tdSp.style.padding = "0";
+                tdSp.style.margin = "0";
+                tdSp.style.height = row.marginTop + "px";
+                trSp.appendChild(tdSp); 
+                tbody.appendChild(trSp);
             }
 
             const tr = document.createElement("tr");
@@ -987,9 +995,17 @@ this.flexContainer.appendChild(addLineBtn);
             if (row.marginBottom > 0) {
                 const trSpB = document.createElement("tr");
                 trSpB.style.height = row.marginBottom + "px";
+                trSpB.style.lineHeight = "0";
+                trSpB.style.fontSize = "0";
                 const tdSpB = document.createElement("td");
-                tdSpB.colSpan = 2; tdSpB.style.backgroundColor = row.marginColor; tdSpB.style.border = "none";
-                trSpB.appendChild(tdSpB); tbody.appendChild(trSpB);
+                tdSpB.colSpan = 2; 
+                tdSpB.style.backgroundColor = row.marginColor; 
+                tdSpB.style.border = "none";
+                tdSpB.style.padding = "0";
+                tdSpB.style.margin = "0";
+                tdSpB.style.height = row.marginBottom + "px";
+                trSpB.appendChild(tdSpB); 
+                tbody.appendChild(trSpB);
             }
         });
 

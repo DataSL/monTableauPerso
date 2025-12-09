@@ -40,8 +40,18 @@
       "properties": {
         "columnIndex": { "displayName": "N° Colonne", "type": { "numeric": true } },
         "ordreTri": { "displayName": "Position", "type": { "numeric": true } },
-        "marginBottom": { "displayName": "Marge Bas", "type": { "numeric": true } },
-        "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
+        "marginBottom": { 
+          "displayName": "Marge Bas", 
+          "type": { 
+            "numeric": true 
+          }
+        },
+        "marginTop": { 
+          "displayName": "Marge Haut", 
+          "type": { 
+            "numeric": true 
+          }
+        },
         "isHidden": { "displayName": "MASQUER", "type": { "bool": true } },
         "marginColor": { "displayName": "Couleur Marge", "type": { "fill": { "solid": { "color": true } } } },
         "customLabel": { "displayName": "Renommer", "type": { "text": true } },
