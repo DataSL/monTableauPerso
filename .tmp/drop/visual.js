@@ -24,9 +24,8 @@ class Visual {
     toolbar;
     pendingChanges = new Map();
     manualLineKeys = [];
-    // NOUVEAU: État pour masquer/afficher les boutons
     areActionButtonsVisible = true;
-    // NOUVEAU: Bordures globales du tableau
+    // Bordures globales du tableau
     tableBorderWidth = 1;
     tableBorderColor = "rgba(0, 0, 0, 0.25)";
     tableBorderStyle = "solid";
@@ -58,7 +57,7 @@ class Visual {
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
-        // NOUVEAU: Charger les bordures globales
+        // Charger les bordures globales du tableau AVANT toute chose
         if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
             const tb = this.metadata.objects["tableBorders"];
             if (tb["borderWidth"] !== undefined)
@@ -70,6 +69,12 @@ class Visual {
             if (tb["borderRadius"] !== undefined)
                 this.tableBorderRadius = tb["borderRadius"];
         }
+        console.log("🔲 BORDURES CHARGÉES:", {
+            width: this.tableBorderWidth,
+            color: this.tableBorderColor,
+            style: this.tableBorderStyle,
+            radius: this.tableBorderRadius
+        });
         // 1. TITRES - Initialisation dynamique
         this.columnTitles = [];
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
@@ -219,6 +224,9 @@ class Visual {
                         let fs = s["fontSize"] ? s["fontSize"] : 12;
                         let bo = s["bold"] ? s["bold"] : false;
                         let it = s["italic"] ? s["italic"] : false;
+                        // Charger les bordures
+                        let bw = s["borderWidth"] !== undefined ? s["borderWidth"] : 1;
+                        let bc = s["borderColor"] ? s["borderColor"].solid.color : "#eee";
                         let vRow = {
                             originalName: key,
                             label: txt, amount: "",
@@ -228,9 +236,8 @@ class Visual {
                             font: "'Segoe UI', sans-serif", fontSize: fs,
                             bgLabel: bg, colorLabel: color, boldLabel: bo, italicLabel: it,
                             bgAmount: bg, colorAmount: color, boldAmount: bo,
-                            // SIMPLIFIÉ: Bordures
-                            borderWidth: 1,
-                            borderColor: "#eee"
+                            borderWidth: bw,
+                            borderColor: bc
                         };
                         this.allRowsData.push(vRow);
                     }
@@ -239,9 +246,13 @@ class Visual {
         }
         // 4. RENDU
         let maxColumnsToShow = Math.max(maxColumnIndexUsed, this.columnTitles.length);
-        // Appliquer les bordures globales au conteneur
-        this.flexContainer.style.border = `${this.tableBorderWidth}px ${this.tableBorderStyle} ${this.tableBorderColor}`;
+        // CORRECTION: Appliquer les bordures SANS !important dans le TypeScript
+        // Le CSS ne doit plus écraser ces valeurs
+        this.flexContainer.style.borderWidth = `${this.tableBorderWidth}px`;
+        this.flexContainer.style.borderStyle = this.tableBorderStyle;
+        this.flexContainer.style.borderColor = this.tableBorderColor;
         this.flexContainer.style.borderRadius = `${this.tableBorderRadius}px`;
+        console.log("🔲 BORDURES APPLIQUÉES au DOM:", this.flexContainer.style.border);
         for (let i = 1; i <= maxColumnsToShow; i++) {
             const colDiv = document.createElement("div");
             colDiv.className = "dynamic-column";
@@ -1093,7 +1104,7 @@ class Visual {
         this.toolbar.onmousedown = (e) => e.stopPropagation();
         this.toolbar.onclick = (e) => e.stopPropagation();
         // Positionner la toolbar
-        const toolbarWidth = 300;
+        const toolbarWidth = 400; // AUGMENTÉ pour les nouveaux boutons
         let left = x - toolbarWidth / 2;
         if (left < 10)
             left = 10;
@@ -1145,7 +1156,6 @@ class Visual {
                 bgAmount: { solid: { color: currentRow.bgAmount } },
                 fillAmount: { solid: { color: currentRow.colorAmount } },
                 boldAmount: currentRow.boldAmount,
-                // SIMPLIFIÉ: Bordures
                 borderWidth: currentRow.borderWidth,
                 borderColor: { solid: { color: currentRow.borderColor } }
             };
@@ -1204,6 +1214,56 @@ class Visual {
         const sep1 = document.createElement("div");
         sep1.className = "separator";
         this.toolbar.appendChild(sep1);
+        // COULEUR FOND LIBELLÉ
+        const colorBgLabelWrapper = document.createElement("div");
+        colorBgLabelWrapper.className = "color-picker-wrapper";
+        const lblBgLabel = document.createElement("label");
+        lblBgLabel.innerText = "Fond";
+        colorBgLabelWrapper.appendChild(lblBgLabel);
+        const colorBgLabel = document.createElement("input");
+        colorBgLabel.type = "color";
+        colorBgLabel.value = row.bgLabel === "transparent" ? "#ffffff" : row.bgLabel;
+        colorBgLabel.onchange = (e) => {
+            e.stopPropagation();
+            const newColor = colorBgLabel.value;
+            row.bgLabel = newColor;
+            row.bgAmount = newColor;
+            if (tr.cells[0])
+                tr.cells[0].style.backgroundColor = newColor;
+            if (tr.cells[1])
+                tr.cells[1].style.backgroundColor = newColor;
+            updatePending({ bgLabel: newColor, bgAmount: newColor });
+            persistAllProps({ bgLabel: { solid: { color: newColor } }, bgAmount: { solid: { color: newColor } } });
+        };
+        colorBgLabelWrapper.appendChild(colorBgLabel);
+        this.toolbar.appendChild(colorBgLabelWrapper);
+        // COULEUR TEXTE LIBELLÉ
+        const colorTextLabelWrapper = document.createElement("div");
+        colorTextLabelWrapper.className = "color-picker-wrapper";
+        const lblTextLabel = document.createElement("label");
+        lblTextLabel.innerText = "Texte";
+        colorTextLabelWrapper.appendChild(lblTextLabel);
+        const colorTextLabel = document.createElement("input");
+        colorTextLabel.type = "color";
+        colorTextLabel.value = row.colorLabel === "black" ? "#000000" : row.colorLabel;
+        colorTextLabel.onchange = (e) => {
+            e.stopPropagation();
+            const newColor = colorTextLabel.value;
+            row.colorLabel = newColor;
+            row.colorAmount = newColor;
+            if (tr.cells[0])
+                tr.cells[0].style.color = newColor;
+            if (tr.cells[1])
+                tr.cells[1].style.color = newColor;
+            updatePending({ colorLabel: newColor, colorAmount: newColor });
+            persistAllProps({ fillLabel: { solid: { color: newColor } }, fillAmount: { solid: { color: newColor } } });
+        };
+        colorTextLabelWrapper.appendChild(colorTextLabel);
+        this.toolbar.appendChild(colorTextLabelWrapper);
+        // SEPARATEUR
+        const sep2 = document.createElement("div");
+        sep2.className = "separator";
+        this.toolbar.appendChild(sep2);
         // TAILLE POLICE (sélecteur)
         const fontSizeWrapper = document.createElement("div");
         fontSizeWrapper.className = "font-size-wrapper";
@@ -1232,9 +1292,9 @@ class Visual {
         fontSizeWrapper.appendChild(selectFontSize);
         this.toolbar.appendChild(fontSizeWrapper);
         // SEPARATEUR
-        const sep2 = document.createElement("div");
-        sep2.className = "separator";
-        this.toolbar.appendChild(sep2);
+        const sep3 = document.createElement("div");
+        sep3.className = "separator";
+        this.toolbar.appendChild(sep3);
         // POLICE (font-family)
         const fontFamilyWrapper = document.createElement("div");
         fontFamilyWrapper.className = "font-family-wrapper";
@@ -1269,19 +1329,6 @@ class Visual {
         };
         fontFamilyWrapper.appendChild(selectFontFamily);
         this.toolbar.appendChild(fontFamilyWrapper);
-        // SEPARATEUR
-        const sep3 = document.createElement("div");
-        sep3.className = "separator";
-        this.toolbar.appendChild(sep3);
-        // SIMPLIFIÉ: Bouton BORDURES
-        const btnBorders = document.createElement("button");
-        btnBorders.innerHTML = "🔲";
-        btnBorders.title = "Personnaliser les bordures";
-        btnBorders.onclick = (e) => {
-            e.stopPropagation();
-            this.showBordersMenu(row, tr, selectionId);
-        };
-        this.toolbar.appendChild(btnBorders);
         // BOUTON FERMER
         const btnClose = document.createElement("button");
         btnClose.className = "close-btn";
@@ -1292,135 +1339,11 @@ class Visual {
         };
         this.toolbar.appendChild(btnClose);
     }
-    // SIMPLIFIÉ: Menu de bordures
-    showBordersMenu(row, tr, selectionId) {
-        const menu = document.createElement("div");
-        menu.className = "borders-menu";
-        menu.style.position = "fixed";
-        menu.style.zIndex = "10001";
-        menu.style.background = "white";
-        menu.style.border = "1px solid #e0e0e0";
-        menu.style.borderRadius = "6px";
-        menu.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-        menu.style.padding = "16px";
-        menu.style.display = "flex";
-        menu.style.flexDirection = "column";
-        menu.style.gap = "12px";
-        menu.style.width = "250px";
-        const title = document.createElement("div");
-        title.innerText = "Bordure de ligne";
-        title.style.fontWeight = "bold";
-        title.style.marginBottom = "8px";
-        title.style.fontSize = "14px";
-        menu.appendChild(title);
-        // Largeur
-        const widthWrapper = document.createElement("div");
-        widthWrapper.style.display = "flex";
-        widthWrapper.style.flexDirection = "column";
-        widthWrapper.style.gap = "6px";
-        const widthLabel = document.createElement("label");
-        widthLabel.innerText = "Largeur (px)";
-        widthLabel.style.fontSize = "12px";
-        widthLabel.style.fontWeight = "500";
-        widthWrapper.appendChild(widthLabel);
-        const widthInput = document.createElement("input");
-        widthInput.type = "number";
-        widthInput.min = "0";
-        widthInput.max = "10";
-        widthInput.value = row.borderWidth.toString();
-        widthInput.style.padding = "6px";
-        widthInput.style.border = "1px solid #ddd";
-        widthInput.style.borderRadius = "4px";
-        widthInput.onchange = () => {
-            const val = parseInt(widthInput.value, 10);
-            row.borderWidth = val;
-            this.updateBorder(row, tr, selectionId);
-        };
-        widthWrapper.appendChild(widthInput);
-        menu.appendChild(widthWrapper);
-        // Couleur
-        const colorWrapper = document.createElement("div");
-        colorWrapper.style.display = "flex";
-        colorWrapper.style.flexDirection = "column";
-        colorWrapper.style.gap = "6px";
-        const colorLabel = document.createElement("label");
-        colorLabel.innerText = "Couleur";
-        colorLabel.style.fontSize = "12px";
-        colorLabel.style.fontWeight = "500";
-        colorWrapper.appendChild(colorLabel);
-        const colorInput = document.createElement("input");
-        colorInput.type = "color";
-        colorInput.value = row.borderColor;
-        colorInput.style.width = "100%";
-        colorInput.style.height = "36px";
-        colorInput.style.border = "1px solid #ddd";
-        colorInput.style.borderRadius = "4px";
-        colorInput.style.cursor = "pointer";
-        colorInput.onchange = () => {
-            row.borderColor = colorInput.value;
-            this.updateBorder(row, tr, selectionId);
-        };
-        colorWrapper.appendChild(colorInput);
-        menu.appendChild(colorWrapper);
-        // Bouton Fermer
-        const closeBtn = document.createElement("button");
-        closeBtn.innerText = "Fermer";
-        closeBtn.style.marginTop = "8px";
-        closeBtn.style.padding = "8px";
-        closeBtn.style.cursor = "pointer";
-        closeBtn.style.background = "#f5f5f5";
-        closeBtn.style.border = "1px solid #ddd";
-        closeBtn.style.borderRadius = "4px";
-        closeBtn.onclick = () => document.body.removeChild(menu);
-        menu.appendChild(closeBtn);
-        // Position
-        const rect = tr.getBoundingClientRect();
-        menu.style.left = (rect.right + 10) + "px";
-        menu.style.top = rect.top + "px";
-        document.body.appendChild(menu);
-    }
-    // SIMPLIFIÉ: Mise à jour bordures
-    updateBorder(row, tr, selectionId) {
-        const tdName = tr.cells[0];
-        const tdAmount = tr.cells[1];
-        const borderStyle = `${row.borderWidth}px solid ${row.borderColor}`;
-        if (tdName) {
-            tdName.style.border = borderStyle;
-            tdName.style.borderRight = "none";
-        }
-        if (tdAmount) {
-            tdAmount.style.border = borderStyle;
-            tdAmount.style.borderLeft = "none";
-        }
-        this.host.persistProperties({
-            replace: [{
-                    objectName: "styleLigne",
-                    selector: selectionId.getSelector(),
-                    properties: {
-                        borderWidth: row.borderWidth,
-                        borderColor: { solid: { color: row.borderColor } }
-                    }
-                }]
-        });
-    }
     enumerateObjectInstances(options) {
         const instances = [];
-        // NOUVEAU: Bordures globales du tableau
-        if (options.objectName === "tableBorders") {
-            instances.push({
-                objectName: "tableBorders",
-                selector: null,
-                properties: {
-                    borderWidth: this.tableBorderWidth,
-                    borderColor: { solid: { color: this.tableBorderColor } },
-                    borderStyle: this.tableBorderStyle,
-                    borderRadius: this.tableBorderRadius
-                }
-            });
-        }
+        // SECTION 0: TITRES COLONNES (toujours visible)
         if (options.objectName === "titresColonnes") {
             const props = {};
-            // Retourner tous les titres existants
             for (let i = 1; i <= 20; i++) {
                 const titre = this.columnTitles[i - 1];
                 if (titre) {
@@ -1433,6 +1356,74 @@ class Visual {
                 properties: props
             });
         }
+        // SECTION 1: SÉLECTION (uniquement si données Excel existent)
+        if (this.categoricalData && options.objectName === "selectionMenu") {
+            instances.push({
+                objectName: "selectionMenu",
+                selector: null,
+                properties: { ligneActive: this.currentSelectedLabel }
+            });
+        }
+        // SECTION 2: PERSONNALISATION (uniquement si données Excel existent et ligne sélectionnée)
+        if (this.categoricalData && options.objectName === "styleLigne") {
+            const categories = this.categoricalData.categories[0];
+            const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
+            if (indexChoisi !== -1) {
+                const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
+                const rowData = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
+                let props = {
+                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: { solid: { color: "transparent" } },
+                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif",
+                    bgLabel: { solid: { color: "transparent" } }, fillLabel: { solid: { color: "black" } }, italicLabel: false, boldLabel: false,
+                    bgAmount: { solid: { color: "transparent" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false,
+                    borderWidth: 1,
+                    borderColor: { solid: { color: "#eee" } }
+                };
+                // Charger depuis DB
+                if (categories.objects && categories.objects[indexChoisi]) {
+                    const style = categories.objects[indexChoisi]["styleLigne"];
+                    if (style) {
+                        if (style["columnIndex"])
+                            props.columnIndex = style["columnIndex"];
+                        if (style["ordreTri"] !== undefined)
+                            props.ordreTri = style["ordreTri"];
+                        if (style["marginBottom"])
+                            props.marginBottom = style["marginBottom"];
+                        if (style["marginTop"])
+                            props.marginTop = style["marginTop"];
+                        if (style["isHidden"])
+                            props.isHidden = style["isHidden"];
+                        if (style["marginColor"])
+                            props.marginColor = style["marginColor"];
+                    }
+                }
+                // Surcharger avec rowData
+                if (rowData) {
+                    props.columnIndex = rowData.columnIndex;
+                    props.ordreTri = rowData.sortIndex;
+                    props.marginBottom = rowData.marginBottom;
+                    props.marginTop = rowData.marginTop;
+                    props.isHidden = rowData.isHidden;
+                    props.marginColor = { solid: { color: rowData.marginColor } };
+                    props.customLabel = rowData.customLabel || "";
+                    props.customAmount = rowData.customAmount || "";
+                    props.isHeader = rowData.isHeader;
+                    props.fontSize = rowData.fontSize;
+                    props.fontFamily = rowData.font;
+                    props.bgLabel = { solid: { color: rowData.bgLabel } };
+                    props.fillLabel = { solid: { color: rowData.colorLabel } };
+                    props.boldLabel = rowData.boldLabel;
+                    props.italicLabel = rowData.italicLabel;
+                    props.bgAmount = { solid: { color: rowData.bgAmount } };
+                    props.fillAmount = { solid: { color: rowData.colorAmount } };
+                    props.boldAmount = rowData.boldAmount;
+                    props.borderWidth = rowData.borderWidth;
+                    props.borderColor = { solid: { color: rowData.borderColor } };
+                }
+                instances.push({ objectName: "styleLigne", selector: selectionId.getSelector(), properties: props });
+            }
+        }
+        // LIGNES MANUELLES (toujours visibles)
         const addManualMenu = (key) => {
             if (options.objectName === key) {
                 let props = { text: "Nouveau Titre", show: false, col: 1, pos: 0, isHeader: true, bgColor: { solid: { color: "" } }, textColor: { solid: { color: "black" } }, marginTop: 0, fontSize: 12, bold: false, italic: false };
@@ -1474,7 +1465,7 @@ class Visual {
         addManualMenu("ligneD");
         addManualMenu("ligneE");
         addManualMenu("ligneF");
-        // Gérer dynamiquement toutes les lignes manuelles
+        // Lignes manuelles dynamiques
         if (this.metadata && this.metadata.objects) {
             Object.keys(this.metadata.objects).forEach(key => {
                 if (key.startsWith("manualLine") && options.objectName === key) {
@@ -1489,7 +1480,9 @@ class Visual {
                         marginTop: 0,
                         fontSize: 12,
                         bold: false,
-                        italic: false
+                        italic: false,
+                        borderWidth: 1,
+                        borderColor: { solid: { color: "#eee" } }
                     };
                     const s = this.metadata.objects[key];
                     if (s["text"])
@@ -1514,6 +1507,10 @@ class Visual {
                         props.bold = s["bold"];
                     if (s["italic"] !== undefined)
                         props.italic = s["italic"];
+                    if (s["borderWidth"] !== undefined)
+                        props.borderWidth = s["borderWidth"];
+                    if (s["borderColor"])
+                        props.borderColor = s["borderColor"];
                     instances.push({
                         objectName: key,
                         selector: null,
@@ -1522,71 +1519,18 @@ class Visual {
                 }
             });
         }
-        if (!this.categoricalData)
-            return instances;
-        const categories = this.categoricalData.categories[0];
-        if (options.objectName === "selectionMenu") {
+        // BORDURES TABLEAU (toujours visible)
+        if (options.objectName === "tableBorders") {
             instances.push({
-                objectName: "selectionMenu",
+                objectName: "tableBorders",
                 selector: null,
-                properties: { ligneActive: this.currentSelectedLabel }
+                properties: {
+                    borderWidth: this.tableBorderWidth,
+                    borderColor: { solid: { color: this.tableBorderColor } },
+                    borderStyle: this.tableBorderStyle,
+                    borderRadius: this.tableBorderRadius
+                }
             });
-        }
-        if (options.objectName === "styleLigne") {
-            const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
-            if (indexChoisi !== -1) {
-                const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
-                const rowData = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
-                let props = {
-                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: { solid: { color: "transparent" } },
-                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif",
-                    bgLabel: { solid: { color: "transparent" } }, fillLabel: { solid: { color: "black" } }, italicLabel: false, boldLabel: false,
-                    bgAmount: { solid: { color: "transparent" } }, fillAmount: { solid: { color: "black" } }, boldAmount: false,
-                    // SIMPLIFIÉ: Bordures
-                    borderWidth: 1,
-                    borderColor: { solid: { color: "#eee" } }
-                };
-                if (categories.objects && categories.objects[indexChoisi]) {
-                    const style = categories.objects[indexChoisi]["styleLigne"];
-                    if (style) {
-                        if (style["columnIndex"])
-                            props.columnIndex = style["columnIndex"];
-                        if (style["ordreTri"] !== undefined)
-                            props.ordreTri = style["ordreTri"];
-                        if (style["marginBottom"])
-                            props.marginBottom = style["marginBottom"];
-                        if (style["marginTop"])
-                            props.marginTop = style["marginTop"];
-                        if (style["isHidden"])
-                            props.isHidden = style["isHidden"];
-                        if (style["marginColor"])
-                            props.marginColor = style["marginColor"];
-                    }
-                }
-                if (rowData) {
-                    props.columnIndex = rowData.columnIndex;
-                    props.ordreTri = rowData.sortIndex;
-                    props.marginBottom = rowData.marginBottom;
-                    props.marginTop = rowData.marginTop;
-                    props.isHidden = rowData.isHidden;
-                    props.marginColor = { solid: { color: rowData.marginColor } };
-                    props.customLabel = rowData.customLabel || "";
-                    props.customAmount = rowData.customAmount || "";
-                    props.isHeader = rowData.isHeader;
-                    props.fontSize = rowData.fontSize;
-                    props.fontFamily = rowData.font;
-                    props.bgLabel = { solid: { color: rowData.bgLabel } };
-                    props.fillLabel = { solid: { color: rowData.colorLabel } };
-                    props.boldLabel = rowData.boldLabel;
-                    props.italicLabel = rowData.italicLabel;
-                    props.bgAmount = { solid: { color: rowData.bgAmount } };
-                    props.fillAmount = { solid: { color: rowData.colorAmount } };
-                    props.boldAmount = rowData.boldAmount;
-                    props.borderWidth = rowData.borderWidth;
-                    props.borderColor = { solid: { color: rowData.borderColor } };
-                }
-                instances.push({ objectName: "styleLigne", selector: selectionId.getSelector(), properties: props });
-            }
         }
         return instances;
     }

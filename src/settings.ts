@@ -77,8 +77,7 @@ class DataPointCardSettings extends FormattingSettingsCard {
 *
 */
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
-    // Create formatting settings model formatting cards
-    dataPointCard = new DataPointCardSettings();
-
-    cards = [this.dataPointCard];
+    // Les cartes seront générées dynamiquement si nécessaire
+    // Pour l'instant, on laisse le modèle vide car tout est géré dans capabilities.json
+    cards: FormattingSettingsCard[] = [];
 }

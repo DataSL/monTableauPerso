@@ -73,7 +73,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine2": {
@@ -89,7 +91,9 @@
         "marginTop": { "displayName": "Marge Haut", "type": { "numeric": true } },
         "fontSize": { "displayName": "Taille", "type": { "formatting": { "fontSize": true } } },
         "bold": { "displayName": "Gras", "type": { "bool": true } },
-        "italic": { "displayName": "Italique", "type": { "bool": true } }
+        "italic": { "displayName": "Italique", "type": { "bool": true } },
+        "borderWidth": { "displayName": "🔲 Bordure - Largeur", "type": { "numeric": true } },
+        "borderColor": { "displayName": "🔲 Bordure - Couleur", "type": { "fill": { "solid": { "color": true } } } }
       }
     },
     "manualLine3": {

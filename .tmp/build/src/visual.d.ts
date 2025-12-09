@@ -28,7 +28,5 @@ export declare class Visual implements IVisual {
     update(options: VisualUpdateOptions): void;
     private renderTableContent;
     private showToolbar;
-    private showBordersMenu;
-    private updateBorder;
     enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;
 }
