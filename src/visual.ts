@@ -68,6 +68,28 @@ export class Visual implements IVisual {
     // Service de formatage (Nécessaire pour buildFormattingModel)
     private formattingSettingsService: FormattingSettingsService;
 
+    // Helper centralisé pour persister les propriétés d'une ligne (merge safe + logs)
+    private persistStyle(selector: any, properties: any, objectName: string = "styleLigne") {
+        // nettoyer les clés undefined
+        Object.keys(properties || {}).forEach(k => { if (properties[k] === undefined) delete properties[k]; });
+        try {
+            // eslint-disable-next-line no-console
+            console.log("PERSIST STYLE -> object:", objectName, "selector:", selector, "props:", properties);
+            this.host.persistProperties({
+                merge: [{
+                    objectName: objectName,
+                    selector: selector,
+                    properties: properties
+                }]
+            });
+            // eslint-disable-next-line no-console
+            console.log("PERSIST STYLE OK ->", objectName);
+        } catch (err) {
+            // eslint-disable-next-line no-console
+            console.error("PERSIST STYLE ERROR:", err);
+        }
+    }
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.target = options.element;
@@ -712,7 +734,7 @@ export class Visual implements IVisual {
                 this.host.persistProperties({
                     merge: [{
                         objectName: "titresColonnes",
-                        selector: null, 
+                        selector: null,
                         properties: { ["titre" + colIndex]: newTitle }
                     }]
                 });
@@ -795,10 +817,14 @@ export class Visual implements IVisual {
                     };
                     e.dataTransfer.setData("text/plain", JSON.stringify(dragData));
                     tr.style.opacity = "0.5";
+                    // DEBUG
+                    // eslint-disable-next-line no-console
+                    console.log("DRAG START:", dragData);
                 }
             };
             
             tr.ondragend = (e: DragEvent) => { tr.style.opacity = "1"; };
+            // DEBUG: highlight when row receives drop events
             tr.ondragover = (e: DragEvent) => {
                 e.preventDefault();
                 if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
@@ -809,6 +835,9 @@ export class Visual implements IVisual {
                 e.preventDefault();
                 e.stopPropagation();
                 tr.style.borderTop = "";
+                // DEBUG
+                // eslint-disable-next-line no-console
+                console.log("DROP ON ROW", { target: row.originalName });
                 if (e.dataTransfer) {
                     const dataStr = e.dataTransfer.getData("text/plain");
                     const data = JSON.parse(dataStr);
@@ -835,13 +864,11 @@ export class Visual implements IVisual {
                                     sortIndex: newSortIndex,
                                     timestamp: Date.now()
                                 });
-                                this.host.persistProperties({
-                                    merge: [{
-                                        objectName: draggedOriginalName,
-                                        selector: null,
-                                        properties: { col: colIndex, pos: newSortIndex }
-                                    }]
-                                });
+                                // nouveau : persistance centralisée
+                                this.persistStyle(null, { col: colIndex, pos: newSortIndex }, draggedOriginalName);
+                                // DEBUG
+                                // eslint-disable-next-line no-console
+                                console.log("PERSIST (virtual) ->", { object: draggedOriginalName, props: { col: colIndex, pos: newSortIndex } });
                                 while (this.flexContainer.firstChild) {
                                     this.flexContainer.removeChild(this.flexContainer.firstChild);
                                 }
@@ -865,10 +892,10 @@ export class Visual implements IVisual {
                                 const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, draggedIndex).createSelectionId();
                                 const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                                 let existingProps: any = {
-                                    marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
-                                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                                    bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
-                                    bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
+                                    // marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
+                                    // customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                                    // bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
+                                    // bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
                                 };
                                 if (currentDraggedRow) {
                                     existingProps.marginBottom = currentDraggedRow.marginBottom;
@@ -895,9 +922,16 @@ export class Visual implements IVisual {
                                 }
                                 existingProps.columnIndex = colIndex;
                                 existingProps.ordreTri = newSortIndex;
-                                this.host.persistProperties({
-                                    replace: [{ objectName: "styleLigne", selector: selectionId.getSelector(), properties: existingProps }]
-                                });
+                                // CLEAN undefined keys
+                                Object.keys(existingProps).forEach(k => { if (existingProps[k] === undefined) delete existingProps[k]; });
+                                // DEBUG before persist
+                                // eslint-disable-next-line no-console
+                                console.log("PERSIST (category) -> selector:", selectionId.getSelector(), "props:", existingProps);
+                                // nouveau : persistance centralisée
+                                this.persistStyle(selectionId.getSelector(), existingProps, "styleLigne");
+                                // DEBUG after persist
+                                // eslint-disable-next-line no-console
+                                console.log("PERSIST DONE (category) for", draggedOriginalName);
                                 const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                                 if (draggedRowData) {
                                     draggedRowData.columnIndex = colIndex;
@@ -1043,13 +1077,11 @@ export class Visual implements IVisual {
                             sortIndex: newSortIndex,
                             timestamp: Date.now()
                         });
-                        this.host.persistProperties({
-                            merge: [{
-                                objectName: draggedOriginalName,
-                                selector: null,
-                                properties: { col: colIndex, pos: newSortIndex }
-                            }]
-                        });
+                        // nouveau : persistance centralisée
+                        this.persistStyle(null, { col: colIndex, pos: newSortIndex }, draggedOriginalName);
+                        // DEBUG
+                        // eslint-disable-next-line no-console
+                        console.log("PERSIST (virtual) ->", { object: draggedOriginalName, props: { col: colIndex, pos: newSortIndex } });
                         while (this.flexContainer.firstChild) {
                             this.flexContainer.removeChild(this.flexContainer.firstChild);
                         }
@@ -1103,9 +1135,16 @@ export class Visual implements IVisual {
                         }
                         existingProps.columnIndex = colIndex;
                         existingProps.ordreTri = newSortIndex;
-                        this.host.persistProperties({
-                            replace: [{ objectName: "styleLigne", selector: selectionId.getSelector(), properties: existingProps }]
-                        });
+                        // CLEAN undefined keys
+                        Object.keys(existingProps).forEach(k => { if (existingProps[k] === undefined) delete existingProps[k]; });
+                        // DEBUG before persist
+                        // eslint-disable-next-line no-console
+                        console.log("PERSIST (category) -> selector:", selectionId.getSelector(), "props:", existingProps);
+                        // nouveau : persistance centralisée
+                        this.persistStyle(selectionId.getSelector(), existingProps, "styleLigne");
+                        // DEBUG after persist
+                        // eslint-disable-next-line no-console
+                        console.log("PERSIST DONE (category) for", draggedOriginalName);
                         const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                         if (draggedRowData) {
                             draggedRowData.columnIndex = colIndex;
@@ -1139,6 +1178,7 @@ export class Visual implements IVisual {
             }
         };
         tbody.appendChild(dropZoneTr);
+        // DEBUG: drop zone logs already handled below
 
         targetTable.appendChild(tbody);
     }
@@ -1223,17 +1263,22 @@ export class Visual implements IVisual {
                 borderColor: { solid: { color: currentRow.borderColor } }
             };
 
-            Object.keys(overrides).forEach(key => {
-                fullProps[key] = overrides[key];
-            });
+            // Appliquer overrides fournis
+            Object.keys(overrides || {}).forEach(k => { fullProps[k] = overrides[k]; });
 
-            this.host.persistProperties({
-                replace: [{
-                    objectName: "styleLigne",
-                    selector: selectionId.getSelector(),
-                    properties: fullProps
-                }]
-            });
+            try {
+                this.host.persistProperties({
+                    merge: [{
+                        objectName: "styleLigne",
+                        selector: selectionId.getSelector(),
+                        properties: fullProps
+                    }]
+                });
+                updatePending(fullProps);
+            } catch (err) {
+                // eslint-disable-next-line no-console
+                console.error("Erreur persistProperties:", err);
+            }
         };
 
         // --- BOUTONS ---

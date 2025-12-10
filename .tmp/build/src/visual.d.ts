@@ -23,6 +23,7 @@ export declare class Visual implements IVisual {
     private tableBorderRadius;
     private formattingSettings;
     private formattingSettingsService;
+    private persistStyle;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     /**
