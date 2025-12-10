@@ -560,32 +560,44 @@ export class Visual implements IVisual {
                     .createSelectionId();
                 
                 // Assigner le sélecteur
-                styleCard.selector = selectionId.getSelector();
+                const selector = selectionId.getSelector();
+                styleCard.selector = selector;
+                // CORRECTION: assigner aussi le selector à CHAQUE slice pour que les persistProperties
+                // déclenchés depuis le panneau de format ciblent bien la ligne sélectionnée.
+                (styleCard.slices || []).forEach(s => { (s as any).selector = selector; });
 
                 const currentRow = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
                 
                 if (currentRow) {
-                    styleCard.columnIndex.value = currentRow.columnIndex;
-                    styleCard.ordreTri.value = currentRow.sortIndex;
-                    styleCard.marginTop.value = currentRow.marginTop;
-                    styleCard.marginBottom.value = currentRow.marginBottom;
-                    styleCard.marginColor.value = { value: currentRow.marginColor };
-                    styleCard.isHidden.value = currentRow.isHidden;
-                    styleCard.isHeader.value = currentRow.isHeader;
-                    styleCard.customLabel.value = currentRow.customLabel || "";
-                    styleCard.customAmount.value = currentRow.customAmount || "";
-                    styleCard.fontSize.value = currentRow.fontSize;
-                    styleCard.fontFamily.value = currentRow.font;
-                    styleCard.bgLabel.value = { value: currentRow.bgLabel };
-                    styleCard.fillLabel.value = { value: currentRow.colorLabel };
-                    styleCard.boldLabel.value = currentRow.boldLabel;
-                    styleCard.italicLabel.value = currentRow.italicLabel;
-                    styleCard.bgAmount.value = { value: currentRow.bgAmount };
-                    styleCard.fillAmount.value = { value: currentRow.colorAmount };
-                    styleCard.boldAmount.value = currentRow.boldAmount;
-                    styleCard.borderWidth.value = currentRow.borderWidth;
-                    styleCard.borderColor.value = { value: currentRow.borderColor };
-                }
+                    // Remplissage dynamique des slices par leur name — évite les problèmes de typage (color pickers, etc.)
+                    (styleCard.slices || []).forEach(slice => {
+                        const name = (slice as any).name;
+                        if (!name) return;
+                        switch (name) {
+                            case "columnIndex": (slice as any).value = currentRow.columnIndex; break;
+                            case "ordreTri": (slice as any).value = currentRow.sortIndex; break;
+                            case "marginTop": (slice as any).value = currentRow.marginTop; break;
+                            case "marginBottom": (slice as any).value = currentRow.marginBottom; break;
+                            case "marginColor": (slice as any).value = { value: currentRow.marginColor }; break;
+                            case "isHidden": (slice as any).value = currentRow.isHidden; break;
+                            case "isHeader": (slice as any).value = currentRow.isHeader; break;
+                            case "customLabel": (slice as any).value = currentRow.customLabel || ""; break;
+                            case "customAmount": (slice as any).value = currentRow.customAmount || ""; break;
+                            case "fontSize": (slice as any).value = currentRow.fontSize; break;
+                            case "fontFamily": (slice as any).value = currentRow.font; break;
+                            case "bgLabel": (slice as any).value = { value: currentRow.bgLabel }; break;
+                            case "fillLabel": (slice as any).value = { value: currentRow.colorLabel }; break;
+                            case "boldLabel": (slice as any).value = currentRow.boldLabel; break;
+                            case "italicLabel": (slice as any).value = currentRow.italicLabel; break;
+                            case "bgAmount": (slice as any).value = { value: currentRow.bgAmount }; break;
+                            case "fillAmount": (slice as any).value = { value: currentRow.colorAmount }; break;
+                            case "boldAmount": (slice as any).value = currentRow.boldAmount; break;
+                            case "borderWidth": (slice as any).value = currentRow.borderWidth; break;
+                            case "borderColor": (slice as any).value = { value: currentRow.borderColor }; break;
+                            default: break;
+                        }
+                    });
+                 }
             }
         }
 
