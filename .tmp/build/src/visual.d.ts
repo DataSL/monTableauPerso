@@ -2,9 +2,6 @@ import powerbi from "powerbi-visuals-api";
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
-import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
-import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
 import "../style/visual.less";
 export declare class Visual implements IVisual {
     private target;
@@ -24,9 +21,15 @@ export declare class Visual implements IVisual {
     private tableBorderColor;
     private tableBorderStyle;
     private tableBorderRadius;
+    private formattingSettings;
+    private formattingSettingsService;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
+    /**
+     * NOUVELLE MÉTHODE OBLIGATOIRE API 5.1+
+     * Remplace enumerateObjectInstances pour la certification Power BI
+     */
+    getFormattingModel(): powerbi.visuals.FormattingModel;
     private renderTableContent;
     private showToolbar;
-    enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject;
 }

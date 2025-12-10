@@ -5,17 +5,18 @@ import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructor
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
-import VisualObjectInstance = powerbi.VisualObjectInstance;
-import EnumerateVisualObjectInstancesOptions = powerbi.EnumerateVisualObjectInstancesOptions;
-import VisualObjectInstanceEnumerationObject = powerbi.VisualObjectInstanceEnumerationObject;
+
+// Importation du Service de formatage (FormattingSettingsService)
+import { formattingSettings, FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
+import { VisualFormattingSettingsModel, ManualLineSettings } from "./settings";
 
 import "../style/visual.less";
 
 interface RowData {
     originalName: string;
-    label: string;      
+    label: string;
     amount: string;
-    columnIndex: number; 
+    columnIndex: number;
     sortIndex: number;
     
     marginBottom: number;
@@ -24,7 +25,7 @@ interface RowData {
     isHidden: boolean;
     isHeader: boolean;
     
-    isVirtual: boolean; 
+    isVirtual: boolean;
 
     font: string; fontSize: number;
     bgLabel: string; colorLabel: string; boldLabel: boolean; italicLabel: boolean;
@@ -62,9 +63,18 @@ export class Visual implements IVisual {
     private tableBorderStyle: string = "solid";
     private tableBorderRadius: number = 8;
 
+    // Modèle de formatage (API 5.1)
+    private formattingSettings: VisualFormattingSettingsModel;
+    // Service de formatage (Nécessaire pour buildFormattingModel)
+    private formattingSettingsService: FormattingSettingsService;
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.target = options.element;
+        
+        // Initialisation du service de formatage
+        this.formattingSettingsService = new FormattingSettingsService();
+
         this.divContainer = document.createElement("div");
         this.divContainer.className = "scroll-wrapper";
         this.target.appendChild(this.divContainer);
@@ -86,7 +96,10 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
-        // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+        // Initialiser le modèle de formatage
+        this.formattingSettings = new VisualFormattingSettingsModel();
+
+        // Nettoyage sécurisé
         while (this.flexContainer.firstChild) {
             this.flexContainer.removeChild(this.flexContainer.firstChild);
         }
@@ -98,7 +111,7 @@ export class Visual implements IVisual {
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
 
-        // Charger les bordures globales du tableau AVANT toute chose
+        // Charger les bordures globales du tableau
         if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
             const tb = this.metadata.objects["tableBorders"];
             if (tb["borderWidth"] !== undefined) this.tableBorderWidth = tb["borderWidth"] as number;
@@ -118,7 +131,6 @@ export class Visual implements IVisual {
         this.columnTitles = [];
         if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
             const t = this.metadata.objects["titresColonnes"];
-            // Charger tous les titres disponibles
             for (let i = 1; i <= 20; i++) {
                 const key = "titre" + i;
                 if (t[key]) {
@@ -153,7 +165,6 @@ export class Visual implements IVisual {
                     font: "'Segoe UI', sans-serif", fontSize: 12,
                     bgLabel: "transparent", colorLabel: "black", boldLabel: false, italicLabel: false,
                     bgAmount: "transparent", colorAmount: "black", boldAmount: false,
-                    // SIMPLIFIÉ: Bordures
                     borderWidth: 1,
                     borderColor: "#eee"
                 };
@@ -162,7 +173,6 @@ export class Visual implements IVisual {
                     const object = categories.objects[index];
                     if (object["styleLigne"]) {
                         const style = object["styleLigne"];
-                        console.log("🔷 LOADING style for", originalName, ":", JSON.stringify(style));
                         if (style["columnIndex"]) row.columnIndex = style["columnIndex"] as number;
                         if (row.columnIndex < 1) row.columnIndex = 1;
                         if (style["ordreTri"] !== undefined) row.sortIndex = style["ordreTri"] as number;
@@ -184,7 +194,6 @@ export class Visual implements IVisual {
                         if (style["fillAmount"]) row.colorAmount = (style["fillAmount"] as any).solid.color;
                         if (style["boldAmount"] !== undefined) row.boldAmount = style["boldAmount"] as boolean;
 
-                        // SIMPLIFIÉ: Charger les bordures
                         if (style["borderWidth"] !== undefined) row.borderWidth = style["borderWidth"] as number;
                         if (style["borderColor"]) row.borderColor = (style["borderColor"] as any).solid.color;
                     }
@@ -193,38 +202,23 @@ export class Visual implements IVisual {
                 // Appliquer les changements en attente (optimiste)
                 if (this.pendingChanges.has(originalName)) {
                     const pending = this.pendingChanges.get(originalName);
-                    console.log("🟡 PENDING CHANGES for", originalName, ":", JSON.stringify(pending));
-                    // Si le changement est récent (< 30 secondes)
                     if (Date.now() - pending.timestamp < 30000) {
                         let allMatched = true;
-                        
-                        // Parcourir toutes les propriétés en attente (sauf timestamp)
                         Object.keys(pending).forEach(key => {
                             if (key === "timestamp") return;
-                            
-                            // Comparaison souple pour gérer les types (ex: number vs string)
-                            // Pour les nombres flottants (sortIndex), on utilise une tolérance
                             let match = false;
                             if (typeof pending[key] === 'number' && typeof row[key] === 'number') {
                                 match = Math.abs(pending[key] - row[key]) < 0.01;
                             } else {
                                 match = pending[key] === row[key];
                             }
-                            
-                            if (match) {
-                                // Power BI a rattrapé cette propriété
-                            } else {
-                                // Power BI n'est pas encore à jour, on force la valeur locale
+                            if (!match) {
                                 row[key] = pending[key];
                                 allMatched = false;
                             }
                         });
-                        
-                        if (allMatched) {
-                            this.pendingChanges.delete(originalName);
-                        }
+                        if (allMatched) this.pendingChanges.delete(originalName);
                     } else {
-                        // Trop vieux, on supprime
                         this.pendingChanges.delete(originalName);
                     }
                 }
@@ -251,8 +245,6 @@ export class Visual implements IVisual {
                         let fs = s["fontSize"] ? s["fontSize"] as number : 12;
                         let bo = s["bold"] ? s["bold"] as boolean : false;
                         let it = s["italic"] ? s["italic"] as boolean : false;
-                        
-                        // Charger les bordures
                         let bw = s["borderWidth"] !== undefined ? s["borderWidth"] as number : 1;
                         let bc = s["borderColor"] ? (s["borderColor"] as any).solid.color : "#eee";
 
@@ -277,14 +269,10 @@ export class Visual implements IVisual {
         // 4. RENDU
         let maxColumnsToShow = Math.max(maxColumnIndexUsed, this.columnTitles.length);
         
-        // CORRECTION: Appliquer les bordures SANS !important dans le TypeScript
-        // Le CSS ne doit plus écraser ces valeurs
         this.flexContainer.style.borderWidth = `${this.tableBorderWidth}px`;
         this.flexContainer.style.borderStyle = this.tableBorderStyle;
         this.flexContainer.style.borderColor = this.tableBorderColor;
         this.flexContainer.style.borderRadius = `${this.tableBorderRadius}px`;
-        
-        console.log("🔲 BORDURES APPLIQUÉES au DOM:", this.flexContainer.style.border);
         
         for (let i = 1; i <= maxColumnsToShow; i++) {
             const colDiv = document.createElement("div");
@@ -299,11 +287,10 @@ export class Visual implements IVisual {
             this.flexContainer.appendChild(colDiv);
         }
         
-        // NOUVEAU: Bouton flèche pour masquer/afficher
+        // Boutons d'actions
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
         toggleBtn.className = "toggle-actions-button";
-        // CORRECTION: Utiliser textContent au lieu de innerHTML
         toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
         toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
         toggleBtn.style.display = "flex";
@@ -337,21 +324,17 @@ export class Visual implements IVisual {
             e.preventDefault();
             e.stopPropagation();
             this.areActionButtonsVisible = !this.areActionButtonsVisible;
-            // CORRECTION: Utiliser textContent
             toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
             toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
             
-            // Afficher/masquer les boutons
             addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
             addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
             if (removeColumnDiv) {
                 removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
             }
         };
-        
         this.flexContainer.appendChild(toggleBtn);
         
-        // Bouton "Ajouter une colonne"
         const addColumnDiv = document.createElement("button");
         addColumnDiv.type = "button";
         addColumnDiv.className = "add-column-button";
@@ -370,7 +353,6 @@ export class Visual implements IVisual {
         addColumnDiv.style.padding = "12px";
         addColumnDiv.style.background = "transparent";
         addColumnDiv.style.zIndex = "1000";
-        // CORRECTION: Utiliser textContent
         addColumnDiv.textContent = "➕";
         addColumnDiv.title = "Ajouter une nouvelle colonne";
         
@@ -387,34 +369,22 @@ export class Visual implements IVisual {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
             const newIndex = this.columnTitles.length + 1;
             const newTitle = "COLONNE " + newIndex;
-            
             this.host.persistProperties({
                 merge: [{
                     objectName: "titresColonnes",
                     selector: null,
-                    properties: {
-                        ["titre" + newIndex]: newTitle
-                    }
+                    properties: { ["titre" + newIndex]: newTitle }
                 }]
             });
         };
         
         addColumnDiv.addEventListener('click', handleAddColumn, true);
-        addColumnDiv.addEventListener('mousedown', (e) => { 
-            e.preventDefault();
-            e.stopPropagation(); 
-        }, true);
-        addColumnDiv.addEventListener('mouseup', (e) => { 
-            e.preventDefault();
-            e.stopPropagation(); 
-        }, true);
-        
+        addColumnDiv.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); }, true);
+        addColumnDiv.addEventListener('mouseup', (e) => { e.preventDefault(); e.stopPropagation(); }, true);
         this.flexContainer.appendChild(addColumnDiv);
 
-        // Bouton "Supprimer toutes les colonnes vides"
         let removeColumnDiv: HTMLButtonElement | null = null;
         if (maxColumnsToShow > 1) {
             const emptyCols: number[] = [];
@@ -442,7 +412,6 @@ export class Visual implements IVisual {
                 removeColumnDiv.style.padding = "12px";
                 removeColumnDiv.style.background = "transparent";
                 removeColumnDiv.style.zIndex = "1000";
-                // CORRECTION: Utiliser textContent
                 removeColumnDiv.textContent = "🗑️";
                 removeColumnDiv.title = `Supprimer toutes les colonnes vides (${emptyCols.join(", ")})`;
 
@@ -450,31 +419,25 @@ export class Visual implements IVisual {
                     e.preventDefault();
                     e.stopPropagation();
                     e.stopImmediatePropagation();
-
                     emptyCols.forEach(col => {
                         this.host.persistProperties({
                             replace: [{
                                 objectName: "titresColonnes",
                                 selector: null,
-                                properties: {
-                                    ["titre" + col]: undefined
-                                }
+                                properties: { ["titre" + col]: undefined }
                             }]
                         });
                     });
                 };
-
                 this.flexContainer.appendChild(removeColumnDiv);
             }
         }
 
-        // Bouton "Ajouter une ligne manuelle"
         const addLineBtn = document.createElement("button");
         addLineBtn.type = "button";
         addLineBtn.className = "add-line-button";
         addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
         
-        // CORRECTION: Remplacer le bloc HTML string par la création d'éléments DOM
         const btnContainer = document.createElement("span");
         btnContainer.style.display = "flex";
         btnContainer.style.alignItems = "center";
@@ -528,16 +491,11 @@ export class Visual implements IVisual {
         addLineBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("[+] Bouton ligne cliqué");
-
-            // Trouver le prochain index disponible
             let nextIndex = 1;
             while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
                 nextIndex++;
             }
             const newKey = "manualLine" + nextIndex;
-            console.log("[+] Création de la ligne :", newKey);
-
             this.host.persistProperties({
                 merge: [{
                     objectName: newKey,
@@ -557,13 +515,129 @@ export class Visual implements IVisual {
                     }
                 }]
             });
-
-            console.log("[+] persistProperties appelé pour", newKey);
         };
         this.flexContainer.appendChild(addLineBtn);
     }
 
+    /**
+     * NOUVELLE MÉTHODE OBLIGATOIRE API 5.1+
+     * Remplace enumerateObjectInstances pour la certification Power BI
+     */
+    public getFormattingModel(): powerbi.visuals.FormattingModel {
+        const model = this.formattingSettings; 
+        
+        // ---------------------------------------------------------
+        // A. TITRES COLONNES
+        // ---------------------------------------------------------
+        if (this.metadata && this.metadata.objects && this.metadata.objects["titresColonnes"]) {
+            const tObj = this.metadata.objects["titresColonnes"];
+            model.titresColonnes.slices.forEach(slice => {
+                if (tObj[slice.name]) {
+                    (slice as formattingSettings.TextInput).value = tObj[slice.name];
+                }
+            });
+        }
+
+        // ---------------------------------------------------------
+        // B. MENU SÉLECTION
+        // ---------------------------------------------------------
+        if (this.metadata && this.metadata.objects && this.metadata.objects["selectionMenu"]) {
+            model.selectionMenu.ligneActive.value = this.metadata.objects["selectionMenu"]["ligneActive"];
+        }
+
+        // ---------------------------------------------------------
+        // C. STYLE DE LIGNE (Logique contextuelle)
+        // ---------------------------------------------------------
+        if (this.categoricalData) {
+            const categories = this.categoricalData.categories[0];
+            const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
+
+            if (indexChoisi !== -1) {
+                const styleCard = model.styleLigne;
+                
+                const selectionId = this.host.createSelectionIdBuilder()
+                    .withCategory(categories, indexChoisi)
+                    .createSelectionId();
+                
+                // Assigner le sélecteur
+                styleCard.selector = selectionId.getSelector();
+
+                const currentRow = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
+                
+                if (currentRow) {
+                    styleCard.columnIndex.value = currentRow.columnIndex;
+                    styleCard.ordreTri.value = currentRow.sortIndex;
+                    styleCard.marginTop.value = currentRow.marginTop;
+                    styleCard.marginBottom.value = currentRow.marginBottom;
+                    styleCard.marginColor.value = { value: currentRow.marginColor };
+                    styleCard.isHidden.value = currentRow.isHidden;
+                    styleCard.isHeader.value = currentRow.isHeader;
+                    styleCard.customLabel.value = currentRow.customLabel || "";
+                    styleCard.customAmount.value = currentRow.customAmount || "";
+                    styleCard.fontSize.value = currentRow.fontSize;
+                    styleCard.fontFamily.value = currentRow.font;
+                    styleCard.bgLabel.value = { value: currentRow.bgLabel };
+                    styleCard.fillLabel.value = { value: currentRow.colorLabel };
+                    styleCard.boldLabel.value = currentRow.boldLabel;
+                    styleCard.italicLabel.value = currentRow.italicLabel;
+                    styleCard.bgAmount.value = { value: currentRow.bgAmount };
+                    styleCard.fillAmount.value = { value: currentRow.colorAmount };
+                    styleCard.boldAmount.value = currentRow.boldAmount;
+                    styleCard.borderWidth.value = currentRow.borderWidth;
+                    styleCard.borderColor.value = { value: currentRow.borderColor };
+                }
+            }
+        }
+
+        // ---------------------------------------------------------
+        // D. LIGNES MANUELLES (Dynamique)
+        // ---------------------------------------------------------
+        if (this.metadata && this.metadata.objects) {
+            const keys = Object.keys(this.metadata.objects).filter(k => k.startsWith("manualLine")).sort();
+            
+            keys.forEach(key => {
+                const manualObj = this.metadata.objects[key];
+                
+                const manualCard = new ManualLineSettings();
+                manualCard.name = key;
+                manualCard.displayName = manualObj["text"] ? String(manualObj["text"]) : key;
+                
+                manualCard.text.value = manualObj["text"];
+                manualCard.show.value = manualObj["show"];
+                manualCard.col.value = manualObj["col"];
+                manualCard.pos.value = manualObj["pos"];
+                manualCard.isHeader.value = manualObj["isHeader"];
+                if (manualObj["bgColor"]) manualCard.bgColor.value = manualObj["bgColor"]["solid"]["color"];
+                if (manualObj["textColor"]) manualCard.textColor.value = manualObj["textColor"]["solid"]["color"];
+                manualCard.marginTop.value = manualObj["marginTop"];
+                manualCard.fontSize.value = manualObj["fontSize"];
+                manualCard.bold.value = manualObj["bold"];
+                manualCard.italic.value = manualObj["italic"];
+                manualCard.borderWidth.value = manualObj["borderWidth"];
+                if (manualObj["borderColor"]) manualCard.borderColor.value = manualObj["borderColor"]["solid"]["color"];
+
+                // Ajouter la carte manuelle à la liste des cartes du modèle
+                model.cards.push(manualCard);
+            });
+        }
+
+        // ---------------------------------------------------------
+        // E. BORDURES GLOBALES
+        // ---------------------------------------------------------
+        if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
+            const borderObj = this.metadata.objects["tableBorders"];
+            model.tableBorders.borderWidth.value = borderObj["borderWidth"];
+            model.tableBorders.borderRadius.value = borderObj["borderRadius"];
+            if (borderObj["borderColor"]) model.tableBorders.borderColor.value = borderObj["borderColor"]["solid"]["color"];
+            if (borderObj["borderStyle"]) model.tableBorders.borderStyle.value = { value: borderObj["borderStyle"] as string, displayName: borderObj["borderStyle"] as string };
+        }
+
+        // CORRECTION MAJEURE: Utiliser le service pour construire le modèle
+        return this.formattingSettingsService.buildFormattingModel(model);
+    }
+
     private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number, categories: any) {
+        // [Contenu inchangé pour le rendu]
         rows.sort((a, b) => a.sortIndex - b.sortIndex);
         
         const thead = document.createElement("thead");
@@ -573,7 +647,6 @@ export class Visual implements IVisual {
         th.style.position = "relative";
         th.style.paddingRight = "30px";
         
-        // Texte du titre (éditable)
         const titleSpan = document.createElement("span");
         titleSpan.innerText = title;
         titleSpan.contentEditable = "false";
@@ -582,7 +655,6 @@ export class Visual implements IVisual {
         titleSpan.style.minWidth = "100px";
         th.appendChild(titleSpan);
         
-        // Bouton d'édition
         const editBtn = document.createElement("button");
         editBtn.innerText = "✏️";
         editBtn.style.position = "absolute";
@@ -607,23 +679,17 @@ export class Visual implements IVisual {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
-            // Activer l'édition
             titleSpan.contentEditable = "true";
             titleSpan.style.backgroundColor = "#fff3cd";
             titleSpan.style.color = "#000000";
             titleSpan.style.padding = "2px 4px";
             titleSpan.style.borderRadius = "3px";
             titleSpan.focus();
-            
-            // Sélectionner tout le texte
             const range = document.createRange();
             range.selectNodeContents(titleSpan);
             const selection = window.getSelection();
             selection?.removeAllRanges();
             selection?.addRange(range);
-            
-            // Changer l'icône en validation
             editBtn.innerText = "✓";
             editBtn.style.color = "green";
         };
@@ -635,14 +701,10 @@ export class Visual implements IVisual {
                     merge: [{
                         objectName: "titresColonnes",
                         selector: null, 
-                        properties: {
-                            ["titre" + colIndex]: newTitle
-                        }
+                        properties: { ["titre" + colIndex]: newTitle }
                     }]
                 });
             }
-            
-            // Désactiver l'édition
             titleSpan.contentEditable = "false";
             titleSpan.style.backgroundColor = "transparent";
             titleSpan.style.color = "";
@@ -651,7 +713,6 @@ export class Visual implements IVisual {
             editBtn.style.color = "";
         };
         
-        // Sauvegarder avec Enter
         titleSpan.addEventListener('keydown', (e: KeyboardEvent) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -668,23 +729,15 @@ export class Visual implements IVisual {
             }
         });
         
-        // Sauvegarder en perdant le focus
         titleSpan.addEventListener('blur', () => {
-            if (titleSpan.contentEditable === "true") {
-                saveEdit();
-            }
+            if (titleSpan.contentEditable === "true") saveEdit();
         });
         
         editBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
-            
-            if (titleSpan.contentEditable === "true") {
-                saveEdit();
-            } else {
-                handleEdit(e);
-            }
+            if (titleSpan.contentEditable === "true") saveEdit(); else handleEdit(e);
         }, true);
         
         editBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); }, true);
@@ -714,8 +767,6 @@ export class Visual implements IVisual {
             }
 
             const tr = document.createElement("tr");
-            
-            // Drag & Drop pour déplacer les lignes (Data et Virtuelles)
             tr.draggable = true;
             tr.style.cursor = "move";
             
@@ -735,28 +786,17 @@ export class Visual implements IVisual {
                 }
             };
             
-            tr.ondragend = (e: DragEvent) => {
-                tr.style.opacity = "1";
-            };
-
-            // Autoriser le drop sur TOUTES les lignes
+            tr.ondragend = (e: DragEvent) => { tr.style.opacity = "1"; };
             tr.ondragover = (e: DragEvent) => {
                 e.preventDefault();
-                if (e.dataTransfer) {
-                    e.dataTransfer.dropEffect = "move";
-                }
+                if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
                 tr.style.borderTop = "2px solid #007acc";
             };
-            
-            tr.ondragleave = (e: DragEvent) => {
-                tr.style.borderTop = "";
-            };
-            
+            tr.ondragleave = (e: DragEvent) => { tr.style.borderTop = ""; };
             tr.ondrop = (e: DragEvent) => {
                 e.preventDefault();
                 e.stopPropagation();
                 tr.style.borderTop = "";
-
                 if (e.dataTransfer) {
                     const dataStr = e.dataTransfer.getData("text/plain");
                     const data = JSON.parse(dataStr);
@@ -764,7 +804,6 @@ export class Visual implements IVisual {
                     const isVirtual = data.isVirtual;
 
                     if (draggedOriginalName !== row.originalName) {
-                        // CALCUL DE LA NOUVELLE POSITION (INSERTION AVANT)
                         const targetRowIndex = rows.findIndex(r => r.originalName === row.originalName);
                         let prevSortIndex = -1000;
                         if (targetRowIndex > 0) {
@@ -774,79 +813,51 @@ export class Visual implements IVisual {
                         }
                         let newSortIndex = (prevSortIndex + row.sortIndex) / 2;
 
-                        // CAS 1: LIGNE MANUELLE
                         if (isVirtual) {
                             const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                             if (currentDraggedRow) {
-                                // Mettre à jour l'affichage local (optimiste)
                                 currentDraggedRow.columnIndex = colIndex;
                                 currentDraggedRow.sortIndex = newSortIndex;
-
                                 this.pendingChanges.set(draggedOriginalName, {
                                     columnIndex: colIndex,
                                     sortIndex: newSortIndex,
                                     timestamp: Date.now()
                                 });
-
-                                // Persister pour Ligne Manuelle (propriétés 'col' et 'pos')
                                 this.host.persistProperties({
                                     merge: [{
                                         objectName: draggedOriginalName,
                                         selector: null,
-                                        properties: {
-                                            col: colIndex,
-                                            pos: newSortIndex
-                                        }
+                                        properties: { col: colIndex, pos: newSortIndex }
                                     }]
                                 });
-
-                                // Rafraîchir l'affichage
-                                // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
                                 while (this.flexContainer.firstChild) {
                                     this.flexContainer.removeChild(this.flexContainer.firstChild);
                                 }
                                 let maxColUsed = 1;
-                                this.allRowsData.forEach(r => {
-                                    if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
-                                });
+                                this.allRowsData.forEach(r => { if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex; });
                                 let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
-                                
                                 for (let i = 1; i <= maxColumnsToShow; i++) {
                                     const colDiv = document.createElement("div");
                                     colDiv.className = "dynamic-column"; 
                                     const table = document.createElement("table");
                                     colDiv.appendChild(table);
-
                                     const colRows = this.allRowsData.filter(r => r.columnIndex === i);
                                     const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
                                     this.renderTableContent(table, colTitle, colRows, i, categories);
                                     this.flexContainer.appendChild(colDiv);
                                 }
                             }
-                        }
-                        // CAS 2: LIGNE CLASSIQUE (Excel)
-                        else if (categories) {
+                        } else if (categories) {
                             const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
                             if (draggedIndex !== -1) {
-                                const selectionId = this.host.createSelectionIdBuilder()
-                                    .withCategory(categories, draggedIndex)
-                                    .createSelectionId();
-                                
+                                const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, draggedIndex).createSelectionId();
                                 const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
-
                                 let existingProps: any = {
-                                    marginBottom: 0, marginTop: 0, isHidden: false, 
-                                    marginColor: {solid:{color:"transparent"}},
-                                    customLabel: "", customAmount: "", isHeader: false, 
-                                    fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                                    bgLabel: {solid:{color:"transparent"}}, 
-                                    fillLabel: {solid:{color:"black"}}, 
-                                    italicLabel: false, boldLabel: false,
-                                    bgAmount: {solid:{color:"transparent"}}, 
-                                    fillAmount: {solid:{color:"black"}}, 
-                                    boldAmount: false
+                                    marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
+                                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                                    bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
+                                    bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
                                 };
-
                                 if (currentDraggedRow) {
                                     existingProps.marginBottom = currentDraggedRow.marginBottom;
                                     existingProps.marginTop = currentDraggedRow.marginTop;
@@ -867,69 +878,36 @@ export class Visual implements IVisual {
                                 } else if (categories.objects && categories.objects[draggedIndex]) {
                                     const style = categories.objects[draggedIndex]["styleLigne"];
                                     if (style) {
-                                        Object.keys(style).forEach(key => {
-                                            if (key !== "columnIndex" && key !== "ordreTri") {
-                                                existingProps[key] = style[key];
-                                            }
-                                        });
+                                        Object.keys(style).forEach(key => { if (key !== "columnIndex" && key !== "ordreTri") existingProps[key] = style[key]; });
                                     }
                                 }
-                                
-
                                 existingProps.columnIndex = colIndex;
                                 existingProps.ordreTri = newSortIndex;
-                                
                                 this.host.persistProperties({
-                                    replace: [{
-                                        objectName: "styleLigne",
-                                        selector: selectionId.getSelector(),
-                                        properties: existingProps
-                                    }]
+                                    replace: [{ objectName: "styleLigne", selector: selectionId.getSelector(), properties: existingProps }]
                                 });
-                                
                                 const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                                 if (draggedRowData) {
                                     draggedRowData.columnIndex = colIndex;
                                     draggedRowData.sortIndex = newSortIndex;
-                                    
                                     this.pendingChanges.set(draggedOriginalName, {
-                                        columnIndex: colIndex,
-                                        sortIndex: newSortIndex,
-                                        marginBottom: draggedRowData.marginBottom,
-                                        marginTop: draggedRowData.marginTop,
-                                        isHidden: draggedRowData.isHidden,
-                                        marginColor: draggedRowData.marginColor,
-                                        customLabel: draggedRowData.customLabel,
-                                        customAmount: draggedRowData.customAmount,
-                                        isHeader: draggedRowData.isHeader,
-                                        fontSize: draggedRowData.fontSize,
-                                        font: draggedRowData.font,
-                                        bgLabel: draggedRowData.bgLabel,
-                                        colorLabel: draggedRowData.colorLabel,
-                                        italicLabel: draggedRowData.italicLabel,
-                                        boldLabel: draggedRowData.boldLabel,
-                                        bgAmount: draggedRowData.bgAmount,
-                                        colorAmount: draggedRowData.colorAmount,
-                                        boldAmount: draggedRowData.boldAmount,
-                                        timestamp: Date.now()
+                                        columnIndex: colIndex, sortIndex: newSortIndex,
+                                        marginBottom: draggedRowData.marginBottom, marginTop: draggedRowData.marginTop, isHidden: draggedRowData.isHidden,
+                                        marginColor: draggedRowData.marginColor, customLabel: draggedRowData.customLabel, customAmount: draggedRowData.customAmount,
+                                        isHeader: draggedRowData.isHeader, fontSize: draggedRowData.fontSize, font: draggedRowData.font,
+                                        bgLabel: draggedRowData.bgLabel, colorLabel: draggedRowData.colorLabel, italicLabel: draggedRowData.italicLabel,
+                                        boldLabel: draggedRowData.boldLabel, bgAmount: draggedRowData.bgAmount, colorAmount: draggedRowData.colorAmount,
+                                        boldAmount: draggedRowData.boldAmount, timestamp: Date.now()
                                     });
-                                    
-                                    // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
-                                    while (this.flexContainer.firstChild) {
-                                        this.flexContainer.removeChild(this.flexContainer.firstChild);
-                                    }
+                                    while (this.flexContainer.firstChild) { this.flexContainer.removeChild(this.flexContainer.firstChild); }
                                     let maxColUsed = 1;
-                                    this.allRowsData.forEach(r => {
-                                        if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
-                                    });
+                                    this.allRowsData.forEach(r => { if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex; });
                                     let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
-                                    
                                     for (let i = 1; i <= maxColumnsToShow; i++) {
                                         const colDiv = document.createElement("div");
                                         colDiv.className = "dynamic-column"; 
                                         const table = document.createElement("table");
                                         colDiv.appendChild(table);
-
                                         const colRows = this.allRowsData.filter(r => r.columnIndex === i);
                                         const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
                                         this.renderTableContent(table, colTitle, colRows, i, categories);
@@ -942,25 +920,17 @@ export class Visual implements IVisual {
                 }
             };
 
-            // CLIC GAUCHE SUR LIGNE (Sélection Auto + Toolbar)
             if (!row.isVirtual) {
                 tr.onclick = (e: MouseEvent) => {
-                    // Ne pas déclencher si on est en train de draguer
                     if (tr.draggable && e.detail === 1) {
-                        e.stopPropagation(); // Empêcher la fermeture immédiate
-                        
-                        // 1. Sélectionner la ligne pour Power BI
+                        e.stopPropagation(); 
                         this.host.persistProperties({
                             merge: [{
                                 objectName: "selectionMenu",
                                 selector: null,
-                                properties: {
-                                    "ligneActive": row.originalName
-                                }
+                                properties: { "ligneActive": row.originalName }
                             }]
                         });
-                        
-                        // 2. Afficher la toolbar
                         this.showToolbar(row, tr, e.clientX, e.clientY, categories);
                     }
                 };
@@ -973,32 +943,20 @@ export class Visual implements IVisual {
             } else {
                 let rawVal = parseFloat(row.amount);
                 if (!row.isVirtual && !row.isHeader && row.amount && !isNaN(rawVal) && rawVal !== 0) {
-                    // Formatage en mode décimal (sans symbole € automatique)
                     finalAmount = new Intl.NumberFormat('fr-FR', { style: 'decimal', minimumFractionDigits: 0 }).format(rawVal);
                 }
             }
 
             tr.style.fontFamily = row.font; tr.style.fontSize = row.fontSize + "px"; 
-
             const tdName = document.createElement("td");
             tdName.innerText = row.label;
             const cellBg = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgLabel;
-            
-            // DEBUG: Vérifier les couleurs au moment du rendu
-            if (row.colorLabel !== "black" || row.bgLabel !== "transparent") {
-                console.log("🎨 RENDERING", row.label, "colorLabel:", row.colorLabel, "bgLabel:", row.bgLabel);
-            }
-            
             tdName.style.backgroundColor = cellBg; tdName.style.color = row.colorLabel;
             if (row.boldLabel) tdName.style.fontWeight = "bold";
             if (row.italicLabel) tdName.style.fontStyle = "italic";
-            
-            // SIMPLIFIÉ: Bordure complète de ligne (pas de séparation label/prix)
             const borderStyle = `${row.borderWidth}px solid ${row.borderColor}`;
-            
             tdName.style.border = borderStyle;
-            tdName.style.borderRight = "none"; // Pas de bordure entre label et prix
-            
+            tdName.style.borderRight = "none"; 
             tr.appendChild(tdName);
 
             const tdAmount = document.createElement("td");
@@ -1007,11 +965,8 @@ export class Visual implements IVisual {
             tdAmount.style.backgroundColor = (row.isHeader || row.isVirtual) ? row.bgLabel : row.bgAmount;
             tdAmount.style.color = row.colorAmount;
             if (row.boldAmount) tdAmount.style.fontWeight = "bold";
-            
-            // Même bordure sur les 4 côtés
             tdAmount.style.border = borderStyle;
-            tdAmount.style.borderLeft = "none"; // Pas de bordure entre label et prix
-            
+            tdAmount.style.borderLeft = "none"; 
             tr.appendChild(tdAmount);
 
             tbody.appendChild(tr);
@@ -1033,7 +988,6 @@ export class Visual implements IVisual {
             }
         });
 
-        // ZONE DE DROP EN BAS DE COLONNE (Pour ajouter à la fin)
         const dropZoneTr = document.createElement("tr");
         dropZoneTr.style.height = "40px"; 
         const dropZoneTd = document.createElement("td");
@@ -1041,7 +995,6 @@ export class Visual implements IVisual {
         dropZoneTd.style.backgroundColor = "transparent";
         dropZoneTd.style.border = "2px dashed transparent";
         dropZoneTd.style.transition = "all 0.2s";
-        // CORRECTION: Utiliser textContent pour vider
         dropZoneTd.textContent = "";
         dropZoneTr.appendChild(dropZoneTd);
 
@@ -1060,93 +1013,59 @@ export class Visual implements IVisual {
             e.stopPropagation();
             dropZoneTd.style.border = "2px dashed transparent";
             dropZoneTd.style.backgroundColor = "transparent";
-
             if (e.dataTransfer) {
                 const dataStr = e.dataTransfer.getData("text/plain");
                 const data = JSON.parse(dataStr);
                 const draggedOriginalName = data.originalName;
                 const isVirtual = data.isVirtual;
-
-                // CALCUL DE LA NOUVELLE POSITION (FIN DE COLONNE)
                 let lastSortIndex = 0;
-                if (rows.length > 0) {
-                    lastSortIndex = rows[rows.length - 1].sortIndex;
-                }
+                if (rows.length > 0) lastSortIndex = rows[rows.length - 1].sortIndex;
                 let newSortIndex = lastSortIndex + 10;
-
-                // CAS 1: LIGNE MANUELLE
                 if (isVirtual) {
                     const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                     if (currentDraggedRow) {
-                        // Mettre à jour l'affichage local (optimiste)
                         currentDraggedRow.columnIndex = colIndex;
                         currentDraggedRow.sortIndex = newSortIndex;
-
                         this.pendingChanges.set(draggedOriginalName, {
                             columnIndex: colIndex,
                             sortIndex: newSortIndex,
                             timestamp: Date.now()
                         });
-
-                        // Persister pour Ligne Manuelle (propriétés 'col' et 'pos')
                         this.host.persistProperties({
                             merge: [{
                                 objectName: draggedOriginalName,
                                 selector: null,
-                                properties: {
-                                    col: colIndex,
-                                    pos: newSortIndex
-                                }
+                                properties: { col: colIndex, pos: newSortIndex }
                             }]
                         });
-
-                        // Rafraîchir l'affichage
-                        // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
                         while (this.flexContainer.firstChild) {
                             this.flexContainer.removeChild(this.flexContainer.firstChild);
                         }
                         let maxColUsed = 1;
-                        this.allRowsData.forEach(r => {
-                            if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
-                        });
+                        this.allRowsData.forEach(r => { if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex; });
                         let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
-                        
                         for (let i = 1; i <= maxColumnsToShow; i++) {
                             const colDiv = document.createElement("div");
                             colDiv.className = "dynamic-column"; 
                             const table = document.createElement("table");
                             colDiv.appendChild(table);
-
                             const colRows = this.allRowsData.filter(r => r.columnIndex === i);
                             const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
                             this.renderTableContent(table, colTitle, colRows, i, categories);
                             this.flexContainer.appendChild(colDiv);
                         }
                     }
-                }
-                // CAS 2: LIGNE CLASSIQUE (Excel)
-                else if (categories) {
+                } else if (categories) {
                     const draggedIndex = categories.values.findIndex(v => v.toString() === draggedOriginalName);
                     if (draggedIndex !== -1) {
-                        const selectionId = this.host.createSelectionIdBuilder()
-                            .withCategory(categories, draggedIndex)
-                            .createSelectionId();
-                        
+                        const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, draggedIndex).createSelectionId();
                         const currentDraggedRow = this.allRowsData.find(r => r.originalName === draggedOriginalName);
-
                         let existingProps: any = {
-                            marginBottom: 0, marginTop: 0, isHidden: false, 
-                            marginColor: {solid:{color:"transparent"}},
-                            customLabel: "", customAmount: "", isHeader: false, 
-                            fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                            bgLabel: {solid:{color:"transparent"}}, 
-                            fillLabel: {solid:{color:"black"}}, 
-                            italicLabel: false, boldLabel: false,
-                            bgAmount: {solid:{color:"transparent"}}, 
-                            fillAmount: {solid:{color:"black"}}, 
-                            boldAmount: false
+                            marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
+                            customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
+                            bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
+                            bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false
                         };
-
                         if (currentDraggedRow) {
                             existingProps.marginBottom = currentDraggedRow.marginBottom;
                             existingProps.marginTop = currentDraggedRow.marginTop;
@@ -1167,75 +1086,36 @@ export class Visual implements IVisual {
                         } else if (categories.objects && categories.objects[draggedIndex]) {
                             const style = categories.objects[draggedIndex]["styleLigne"];
                             if (style) {
-                                Object.keys(style).forEach(key => {
-                                    if (key !== "columnIndex" && key !== "ordreTri") {
-                                        existingProps[key] = style[key];
-                                    }
-                                });
+                                Object.keys(style).forEach(key => { if (key !== "columnIndex" && key !== "ordreTri") existingProps[key] = style[key]; });
                             }
                         }
-                        
                         existingProps.columnIndex = colIndex;
                         existingProps.ordreTri = newSortIndex;
-                        
-                        console.log("🔵 DRAG (END ZONE) Final props to persist:", JSON.stringify(existingProps));
-                        
-                        const instancesToPersist: any = {
-                            merge: [{
-                                objectName: "styleLigne",
-                                selector: selectionId.getSelector(),
-                                properties: existingProps
-                            }]
-                        };
-                        
-                        console.log("🟢 PERSISTING (drag end zone):", JSON.stringify(instancesToPersist));
-                        
-                        this.host.persistProperties(instancesToPersist);
-                        console.log("✅ persistProperties called successfully (drop at end)");
-                        
+                        this.host.persistProperties({
+                            replace: [{ objectName: "styleLigne", selector: selectionId.getSelector(), properties: existingProps }]
+                        });
                         const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                         if (draggedRowData) {
                             draggedRowData.columnIndex = colIndex;
                             draggedRowData.sortIndex = newSortIndex;
-                            
                             this.pendingChanges.set(draggedOriginalName, {
-                                columnIndex: colIndex,
-                                sortIndex: newSortIndex,
-                                marginBottom: draggedRowData.marginBottom,
-                                marginTop: draggedRowData.marginTop,
-                                isHidden: draggedRowData.isHidden,
-                                marginColor: draggedRowData.marginColor,
-                                customLabel: draggedRowData.customLabel,
-                                customAmount: draggedRowData.customAmount,
-                                isHeader: draggedRowData.isHeader,
-                                fontSize: draggedRowData.fontSize,
-                                font: draggedRowData.font,
-                                bgLabel: draggedRowData.bgLabel,
-                                colorLabel: draggedRowData.colorLabel,
-                                italicLabel: draggedRowData.italicLabel,
-                                boldLabel: draggedRowData.boldLabel,
-                                bgAmount: draggedRowData.bgAmount,
-                                colorAmount: draggedRowData.colorAmount,
-                                boldAmount: draggedRowData.boldAmount,
-                                timestamp: Date.now()
+                                columnIndex: colIndex, sortIndex: newSortIndex,
+                                marginBottom: draggedRowData.marginBottom, marginTop: draggedRowData.marginTop, isHidden: draggedRowData.isHidden,
+                                marginColor: draggedRowData.marginColor, customLabel: draggedRowData.customLabel, customAmount: draggedRowData.customAmount,
+                                isHeader: draggedRowData.isHeader, fontSize: draggedRowData.fontSize, font: draggedRowData.font,
+                                bgLabel: draggedRowData.bgLabel, colorLabel: draggedRowData.colorLabel, italicLabel: draggedRowData.italicLabel,
+                                boldLabel: draggedRowData.boldLabel, bgAmount: draggedRowData.bgAmount, colorAmount: draggedRowData.colorAmount,
+                                boldAmount: draggedRowData.boldAmount, timestamp: Date.now()
                             });
-                            
-                            // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
-                            while (this.flexContainer.firstChild) {
-                                this.flexContainer.removeChild(this.flexContainer.firstChild);
-                            }
+                            while (this.flexContainer.firstChild) { this.flexContainer.removeChild(this.flexContainer.firstChild); }
                             let maxColUsed = 1;
-                            this.allRowsData.forEach(r => {
-                                if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
-                            });
+                            this.allRowsData.forEach(r => { if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex; });
                             let maxColumnsToShow = Math.max(maxColUsed, this.columnTitles.length);
-                            
                             for (let i = 1; i <= maxColumnsToShow; i++) {
                                 const colDiv = document.createElement("div");
                                 colDiv.className = "dynamic-column"; 
                                 const table = document.createElement("table");
                                 colDiv.appendChild(table);
-
                                 const colRows = this.allRowsData.filter(r => r.columnIndex === i);
                                 const colTitle = this.columnTitles[i-1] || ("COLONNE " + i);
                                 this.renderTableContent(table, colTitle, colRows, i, categories);
@@ -1259,7 +1139,6 @@ export class Visual implements IVisual {
             return;
         }
 
-        // CORRECTION: Vider la toolbar proprement
         while (this.toolbar.firstChild) {
             this.toolbar.removeChild(this.toolbar.firstChild);
         }
@@ -1270,7 +1149,7 @@ export class Visual implements IVisual {
         this.toolbar.onclick = (e) => e.stopPropagation();
 
         // Positionner la toolbar
-        const toolbarWidth = 400; // AUGMENTÉ pour les nouveaux boutons
+        const toolbarWidth = 400; 
         let left = x - toolbarWidth / 2;
         if (left < 10) left = 10;
         if (left + toolbarWidth > window.innerWidth) left = window.innerWidth - toolbarWidth - 10;
@@ -1349,7 +1228,6 @@ export class Visual implements IVisual {
 
         // GRAS (B)
         const btnBold = document.createElement("button");
-        // CORRECTION: Création DOM pour <b>B</b>
         const bElem = document.createElement("b");
         bElem.textContent = "B";
         btnBold.appendChild(bElem);
@@ -1374,7 +1252,6 @@ export class Visual implements IVisual {
 
         // ITALIQUE (I)
         const btnItalic = document.createElement("button");
-        // CORRECTION: Création DOM pour <i>I</i>
         const iElem = document.createElement("i");
         iElem.textContent = "I";
         btnItalic.appendChild(iElem);
@@ -1478,181 +1355,5 @@ export class Visual implements IVisual {
             this.toolbar.style.display = "none";
         };
         this.toolbar.appendChild(btnClose);
-    }
-
-    public enumerateObjectInstances(options: EnumerateVisualObjectInstancesOptions): VisualObjectInstance[] | VisualObjectInstanceEnumerationObject {
-        const instances: VisualObjectInstance[] = [];
-
-        // SECTION 0: TITRES COLONNES (toujours visible)
-        if (options.objectName === "titresColonnes") {
-            const props: any = {};
-            for (let i = 1; i <= 20; i++) {
-                const titre = this.columnTitles[i-1];
-                if (titre) {
-                    props["titre" + i] = titre;
-                }
-            }
-            instances.push({ 
-                objectName: "titresColonnes", 
-                selector: null,
-                properties: props
-            });
-        }
-
-        // SECTION 1: SÉLECTION (uniquement si données Excel existent)
-        if (this.categoricalData && options.objectName === "selectionMenu") {
-            instances.push({ 
-                objectName: "selectionMenu", 
-                selector: null,
-                properties: { ligneActive: this.currentSelectedLabel } 
-            });
-        }
-
-        // SECTION 2: PERSONNALISATION (uniquement si données Excel existent et ligne sélectionnée)
-        if (this.categoricalData && options.objectName === "styleLigne") {
-            const categories = this.categoricalData.categories[0];
-            const indexChoisi = categories.values.findIndex(v => v.toString() === this.currentSelectedLabel);
-            
-            if (indexChoisi !== -1) {
-                const selectionId = this.host.createSelectionIdBuilder().withCategory(categories, indexChoisi).createSelectionId();
-                const rowData = this.allRowsData.find(r => r.originalName === this.currentSelectedLabel);
-                
-                let props: any = {
-                    columnIndex: 1, ordreTri: indexChoisi, marginBottom: 0, marginTop: 0, isHidden: false, marginColor: {solid:{color:"transparent"}},
-                    customLabel: "", customAmount: "", isHeader: false, fontSize: 12, fontFamily: "'Segoe UI', sans-serif", 
-                    bgLabel: {solid:{color:"transparent"}}, fillLabel: {solid:{color:"black"}}, italicLabel: false, boldLabel: false,
-                    bgAmount: {solid:{color:"transparent"}}, fillAmount: {solid:{color:"black"}}, boldAmount: false,
-                    borderWidth: 1,
-                    borderColor: { solid: { color: "#eee" } }
-                };
-                
-                // Charger depuis DB
-                if (categories.objects && categories.objects[indexChoisi]) {
-                    const style = categories.objects[indexChoisi]["styleLigne"];
-                    if (style) {
-                        if (style["columnIndex"]) props.columnIndex = style["columnIndex"];
-                        if (style["ordreTri"] !== undefined) props.ordreTri = style["ordreTri"];
-                        if (style["marginBottom"]) props.marginBottom = style["marginBottom"];
-                        if (style["marginTop"]) props.marginTop = style["marginTop"];
-                        if (style["isHidden"]) props.isHidden = style["isHidden"];
-                        if (style["marginColor"]) props.marginColor = style["marginColor"];
-                    }
-                }
-                
-                // Surcharger avec rowData
-                if (rowData) {
-                    props.columnIndex = rowData.columnIndex;
-                    props.ordreTri = rowData.sortIndex;
-                    props.marginBottom = rowData.marginBottom;
-                    props.marginTop = rowData.marginTop;
-                    props.isHidden = rowData.isHidden;
-                    props.marginColor = { solid: { color: rowData.marginColor } };
-                    props.customLabel = rowData.customLabel || "";
-                    props.customAmount = rowData.customAmount || "";
-                    props.isHeader = rowData.isHeader;
-                    props.fontSize = rowData.fontSize;
-                    props.fontFamily = rowData.font;
-                    props.bgLabel = { solid: { color: rowData.bgLabel } };
-                    props.fillLabel = { solid: { color: rowData.colorLabel } };
-                    props.boldLabel = rowData.boldLabel;
-                    props.italicLabel = rowData.italicLabel;
-                    props.bgAmount = { solid: { color: rowData.bgAmount } };
-                    props.fillAmount = { solid: { color: rowData.colorAmount } };
-                    props.boldAmount = rowData.boldAmount;
-                    props.borderWidth = rowData.borderWidth;
-                    props.borderColor = { solid: { color: rowData.borderColor } };
-                }
-                
-                instances.push({ objectName: "styleLigne", selector: selectionId.getSelector(), properties: props });
-            }
-        }
-
-        // LIGNES MANUELLES (toujours visibles)
-        const addManualMenu = (key: string) => {
-            if (options.objectName === key) {
-                let props: any = { text: "Nouveau Titre", show: false, col: 1, pos: 0, isHeader: true, bgColor: {solid:{color:""}}, textColor: {solid:{color:"black"}}, marginTop: 0, fontSize: 12, bold: false, italic: false };
-                if (this.metadata && this.metadata.objects && this.metadata.objects[key]) {
-                    const s = this.metadata.objects[key];
-                    if (s["text"]) props.text = s["text"];
-                    if (s["show"] !== undefined) props.show = s["show"];
-                    if (s["col"]) props.col = s["col"];
-                    if (s["pos"] !== undefined) props.pos = s["pos"];
-                    if (s["isHeader"] !== undefined) props.isHeader = s["isHeader"];
-                    if (s["bgColor"]) props.bgColor = s["bgColor"];
-                    if (s["textColor"]) props.textColor = s["textColor"];
-                    if (s["marginTop"]) props.marginTop = s["marginTop"];
-                    if (s["fontSize"]) props.fontSize = s["fontSize"];
-                    if (s["bold"] !== undefined) props.bold = s["bold"];
-                    if (s["italic"] !== undefined) props.italic = s["italic"];
-                }
-                instances.push({ 
-                    objectName: key, 
-                    selector: null,
-                    properties: props 
-                });
-            }
-        };
-
-        addManualMenu("ligneA"); addManualMenu("ligneB"); addManualMenu("ligneC");
-        addManualMenu("ligneD"); addManualMenu("ligneE"); addManualMenu("ligneF");
-
-        // Lignes manuelles dynamiques
-        if (this.metadata && this.metadata.objects) {
-            Object.keys(this.metadata.objects).forEach(key => {
-                if (key.startsWith("manualLine") && options.objectName === key) {
-                    let props: any = { 
-                        text: "Nouvelle Ligne", 
-                        show: false, 
-                        col: 1, 
-                        pos: 0, 
-                        isHeader: false, 
-                        bgColor: {solid:{color:"transparent"}}, 
-                        textColor: {solid:{color:"black"}}, 
-                        marginTop: 0, 
-                        fontSize: 12, 
-                        bold: false, 
-                        italic: false,
-                        borderWidth: 1,
-                        borderColor: {solid:{color:"#eee"}}
-                    };
-                    const s = this.metadata.objects[key];
-                    if (s["text"]) props.text = s["text"];
-                    if (s["show"] !== undefined) props.show = s["show"];
-                    if (s["col"]) props.col = s["col"];
-                    if (s["pos"] !== undefined) props.pos = s["pos"];
-                    if (s["isHeader"] !== undefined) props.isHeader = s["isHeader"];
-                    if (s["bgColor"]) props.bgColor = s["bgColor"];
-                    if (s["textColor"]) props.textColor = s["textColor"];
-                    if (s["marginTop"]) props.marginTop = s["marginTop"];
-                    if (s["fontSize"]) props.fontSize = s["fontSize"];
-                    if (s["bold"] !== undefined) props.bold = s["bold"];
-                    if (s["italic"] !== undefined) props.italic = s["italic"];
-                    if (s["borderWidth"] !== undefined) props.borderWidth = s["borderWidth"];
-                    if (s["borderColor"]) props.borderColor = s["borderColor"];
-                    
-                    instances.push({ 
-                        objectName: key, 
-                        selector: null,
-                        properties: props 
-                    });
-                }
-            });
-        }
-
-        // BORDURES TABLEAU (toujours visible)
-        if (options.objectName === "tableBorders") {
-            instances.push({
-                objectName: "tableBorders",
-                selector: null,
-                properties: {
-                    borderWidth: this.tableBorderWidth,
-                    borderColor: { solid: { color: this.tableBorderColor } },
-                    borderStyle: this.tableBorderStyle,
-                    borderRadius: this.tableBorderRadius
-                }
-            });
-        }
-
-        return instances;
     }
 }
