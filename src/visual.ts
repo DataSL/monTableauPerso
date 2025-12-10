@@ -86,7 +86,11 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
-        this.flexContainer.innerHTML = "";
+        // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+        while (this.flexContainer.firstChild) {
+            this.flexContainer.removeChild(this.flexContainer.firstChild);
+        }
+        
         this.allRowsData = [];
         this.manualLineKeys = [];
 
@@ -299,7 +303,8 @@ export class Visual implements IVisual {
         const toggleBtn = document.createElement("button");
         toggleBtn.type = "button";
         toggleBtn.className = "toggle-actions-button";
-        toggleBtn.innerHTML = this.areActionButtonsVisible ? "◀" : "▶";
+        // CORRECTION: Utiliser textContent au lieu de innerHTML
+        toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
         toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
         toggleBtn.style.display = "flex";
         toggleBtn.style.alignItems = "center";
@@ -332,7 +337,8 @@ export class Visual implements IVisual {
             e.preventDefault();
             e.stopPropagation();
             this.areActionButtonsVisible = !this.areActionButtonsVisible;
-            toggleBtn.innerHTML = this.areActionButtonsVisible ? "◀" : "▶";
+            // CORRECTION: Utiliser textContent
+            toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
             toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
             
             // Afficher/masquer les boutons
@@ -364,7 +370,8 @@ export class Visual implements IVisual {
         addColumnDiv.style.padding = "12px";
         addColumnDiv.style.background = "transparent";
         addColumnDiv.style.zIndex = "1000";
-        addColumnDiv.innerHTML = "➕";
+        // CORRECTION: Utiliser textContent
+        addColumnDiv.textContent = "➕";
         addColumnDiv.title = "Ajouter une nouvelle colonne";
         
         addColumnDiv.onmouseover = () => { 
@@ -435,7 +442,8 @@ export class Visual implements IVisual {
                 removeColumnDiv.style.padding = "12px";
                 removeColumnDiv.style.background = "transparent";
                 removeColumnDiv.style.zIndex = "1000";
-                removeColumnDiv.innerHTML = "🗑️";
+                // CORRECTION: Utiliser textContent
+                removeColumnDiv.textContent = "🗑️";
                 removeColumnDiv.title = `Supprimer toutes les colonnes vides (${emptyCols.join(", ")})`;
 
                 removeColumnDiv.onclick = (e) => {
@@ -462,87 +470,97 @@ export class Visual implements IVisual {
 
         // Bouton "Ajouter une ligne manuelle"
         const addLineBtn = document.createElement("button");
-addLineBtn.type = "button";
-addLineBtn.className = "add-line-button";
-addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
-addLineBtn.innerHTML = `
-    <span style="
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    ">
-        <span style="
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            background: #e6f2ff;
-            border-radius: 50%;
-            border: 1px solid #b3d7ff;
-            color: #007acc;
-            font-size: 16px;
-            font-weight: bold;
-            box-sizing: border-box;
-        ">+</span>
-        <span style="color:#007acc;font-size:14px;font-weight:500;">Ligne</span>
-    </span>`;
-addLineBtn.title = "Ajouter une nouvelle ligne";
-addLineBtn.style.margin = "6px";
-addLineBtn.style.padding = "2px 12px";
-addLineBtn.style.background = "white";
-addLineBtn.style.border = "1px solid #b3d7ff";
-addLineBtn.style.borderRadius = "18px";
-addLineBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
-addLineBtn.style.cursor = "pointer";
-addLineBtn.style.alignItems = "center";
-addLineBtn.style.justifyContent = "center";
-addLineBtn.style.fontFamily = "'Segoe UI', Arial, sans-serif";
-addLineBtn.style.fontSize = "14px";
-addLineBtn.onmouseover = () => {
-    addLineBtn.style.background = "#e6f2ff";
-    addLineBtn.style.borderColor = "#007acc";
-};
-addLineBtn.onmouseout = () => {
-    addLineBtn.style.background = "white";
-    addLineBtn.style.borderColor = "#b3d7ff";
-};
-addLineBtn.onclick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("[+] Bouton ligne cliqué");
+        addLineBtn.type = "button";
+        addLineBtn.className = "add-line-button";
+        addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
+        
+        // CORRECTION: Remplacer le bloc HTML string par la création d'éléments DOM
+        const btnContainer = document.createElement("span");
+        btnContainer.style.display = "flex";
+        btnContainer.style.alignItems = "center";
+        btnContainer.style.gap = "6px";
 
-    // Trouver le prochain index disponible
-    let nextIndex = 1;
-    while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
-        nextIndex++;
-    }
-    const newKey = "manualLine" + nextIndex;
-    console.log("[+] Création de la ligne :", newKey);
+        const btnIcon = document.createElement("span");
+        btnIcon.style.display = "flex";
+        btnIcon.style.alignItems = "center";
+        btnIcon.style.justifyContent = "center";
+        btnIcon.style.width = "22px";
+        btnIcon.style.height = "22px";
+        btnIcon.style.background = "#e6f2ff";
+        btnIcon.style.borderRadius = "50%";
+        btnIcon.style.border = "1px solid #b3d7ff";
+        btnIcon.style.color = "#007acc";
+        btnIcon.style.fontSize = "16px";
+        btnIcon.style.fontWeight = "bold";
+        btnIcon.style.boxSizing = "border-box";
+        btnIcon.textContent = "+";
 
-    this.host.persistProperties({
-        merge: [{
-            objectName: newKey,
-            selector: null,
-            properties: {
-                text: "Nouvelle Ligne " + nextIndex,
-                show: true,
-                col: 1,
-                pos: 0,
-                isHeader: false,
-                bgColor: { solid: { color: "transparent" } },
-                textColor: { solid: { color: "black" } },
-                marginTop: 0,
-                fontSize: 12,
-                bold: false,
-                italic: false
+        const btnText = document.createElement("span");
+        btnText.style.color = "#007acc";
+        btnText.style.fontSize = "14px";
+        btnText.style.fontWeight = "500";
+        btnText.textContent = "Ligne";
+
+        btnContainer.appendChild(btnIcon);
+        btnContainer.appendChild(btnText);
+        addLineBtn.appendChild(btnContainer);
+
+        addLineBtn.title = "Ajouter une nouvelle ligne";
+        addLineBtn.style.margin = "6px";
+        addLineBtn.style.padding = "2px 12px";
+        addLineBtn.style.background = "white";
+        addLineBtn.style.border = "1px solid #b3d7ff";
+        addLineBtn.style.borderRadius = "18px";
+        addLineBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
+        addLineBtn.style.cursor = "pointer";
+        addLineBtn.style.alignItems = "center";
+        addLineBtn.style.justifyContent = "center";
+        addLineBtn.style.fontFamily = "'Segoe UI', Arial, sans-serif";
+        addLineBtn.style.fontSize = "14px";
+        addLineBtn.onmouseover = () => {
+            addLineBtn.style.background = "#e6f2ff";
+            addLineBtn.style.borderColor = "#007acc";
+        };
+        addLineBtn.onmouseout = () => {
+            addLineBtn.style.background = "white";
+            addLineBtn.style.borderColor = "#b3d7ff";
+        };
+        addLineBtn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("[+] Bouton ligne cliqué");
+
+            // Trouver le prochain index disponible
+            let nextIndex = 1;
+            while (this.manualLineKeys.includes("manualLine" + nextIndex)) {
+                nextIndex++;
             }
-        }]
-    });
+            const newKey = "manualLine" + nextIndex;
+            console.log("[+] Création de la ligne :", newKey);
 
-    console.log("[+] persistProperties appelé pour", newKey);
-};
-this.flexContainer.appendChild(addLineBtn);
+            this.host.persistProperties({
+                merge: [{
+                    objectName: newKey,
+                    selector: null,
+                    properties: {
+                        text: "Nouvelle Ligne " + nextIndex,
+                        show: true,
+                        col: 1,
+                        pos: 0,
+                        isHeader: false,
+                        bgColor: { solid: { color: "transparent" } },
+                        textColor: { solid: { color: "black" } },
+                        marginTop: 0,
+                        fontSize: 12,
+                        bold: false,
+                        italic: false
+                    }
+                }]
+            });
+
+            console.log("[+] persistProperties appelé pour", newKey);
+        };
+        this.flexContainer.appendChild(addLineBtn);
     }
 
     private renderTableContent(targetTable: HTMLTableElement, title: string, rows: RowData[], colIndex: number, categories: any) {
@@ -783,7 +801,10 @@ this.flexContainer.appendChild(addLineBtn);
                                 });
 
                                 // Rafraîchir l'affichage
-                                this.flexContainer.innerHTML = "";
+                                // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+                                while (this.flexContainer.firstChild) {
+                                    this.flexContainer.removeChild(this.flexContainer.firstChild);
+                                }
                                 let maxColUsed = 1;
                                 this.allRowsData.forEach(r => {
                                     if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
@@ -893,7 +914,10 @@ this.flexContainer.appendChild(addLineBtn);
                                         timestamp: Date.now()
                                     });
                                     
-                                    this.flexContainer.innerHTML = "";
+                                    // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+                                    while (this.flexContainer.firstChild) {
+                                        this.flexContainer.removeChild(this.flexContainer.firstChild);
+                                    }
                                     let maxColUsed = 1;
                                     this.allRowsData.forEach(r => {
                                         if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
@@ -1017,7 +1041,8 @@ this.flexContainer.appendChild(addLineBtn);
         dropZoneTd.style.backgroundColor = "transparent";
         dropZoneTd.style.border = "2px dashed transparent";
         dropZoneTd.style.transition = "all 0.2s";
-        dropZoneTd.innerHTML = "";
+        // CORRECTION: Utiliser textContent pour vider
+        dropZoneTd.textContent = "";
         dropZoneTr.appendChild(dropZoneTd);
 
         dropZoneTr.ondragover = (e) => {
@@ -1076,7 +1101,10 @@ this.flexContainer.appendChild(addLineBtn);
                         });
 
                         // Rafraîchir l'affichage
-                        this.flexContainer.innerHTML = "";
+                        // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+                        while (this.flexContainer.firstChild) {
+                            this.flexContainer.removeChild(this.flexContainer.firstChild);
+                        }
                         let maxColUsed = 1;
                         this.allRowsData.forEach(r => {
                             if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
@@ -1192,7 +1220,10 @@ this.flexContainer.appendChild(addLineBtn);
                                 timestamp: Date.now()
                             });
                             
-                            this.flexContainer.innerHTML = "";
+                            // CORRECTION: Remplacer innerHTML = "" par une boucle de suppression sécurisée
+                            while (this.flexContainer.firstChild) {
+                                this.flexContainer.removeChild(this.flexContainer.firstChild);
+                            }
                             let maxColUsed = 1;
                             this.allRowsData.forEach(r => {
                                 if (r.columnIndex > maxColUsed) maxColUsed = r.columnIndex;
@@ -1228,7 +1259,10 @@ this.flexContainer.appendChild(addLineBtn);
             return;
         }
 
-        this.toolbar.innerHTML = "";
+        // CORRECTION: Vider la toolbar proprement
+        while (this.toolbar.firstChild) {
+            this.toolbar.removeChild(this.toolbar.firstChild);
+        }
         this.toolbar.style.display = "flex";
 
         // Stop propagation on the toolbar itself
@@ -1315,7 +1349,11 @@ this.flexContainer.appendChild(addLineBtn);
 
         // GRAS (B)
         const btnBold = document.createElement("button");
-        btnBold.innerHTML = "<b>B</b>";
+        // CORRECTION: Création DOM pour <b>B</b>
+        const bElem = document.createElement("b");
+        bElem.textContent = "B";
+        btnBold.appendChild(bElem);
+        
         btnBold.title = "Gras";
         if (row.boldLabel) btnBold.className = "active";
         btnBold.onclick = (e) => {
@@ -1336,7 +1374,11 @@ this.flexContainer.appendChild(addLineBtn);
 
         // ITALIQUE (I)
         const btnItalic = document.createElement("button");
-        btnItalic.innerHTML = "<i>I</i>";
+        // CORRECTION: Création DOM pour <i>I</i>
+        const iElem = document.createElement("i");
+        iElem.textContent = "I";
+        btnItalic.appendChild(iElem);
+
         btnItalic.title = "Italique";
         if (row.italicLabel) btnItalic.className = "active";
         btnItalic.onclick = (e) => {
@@ -1429,7 +1471,8 @@ this.flexContainer.appendChild(addLineBtn);
         // BOUTON FERMER
         const btnClose = document.createElement("button");
         btnClose.className = "close-btn";
-        btnClose.innerHTML = "✖";
+        // CORRECTION: Utiliser textContent
+        btnClose.textContent = "✖";
         btnClose.onclick = (e) => {
             e.stopPropagation();
             this.toolbar.style.display = "none";
