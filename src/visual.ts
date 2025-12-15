@@ -6,6 +6,13 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
+// Importation des types pour la gestion des licences (API 4.7+)
+import IVisualLicenseManager = powerbi.extensibility.IVisualLicenseManager;
+import LicenseInfoResult = powerbi.extensibility.visual.LicenseInfoResult;
+import ServicePlan = powerbi.extensibility.visual.ServicePlan;
+import ServicePlanState = powerbi.ServicePlanState;
+import LicenseNotificationType = powerbi.LicenseNotificationType;
+
 // Importation du Service de formatage (FormattingSettingsService)
 import { formattingSettings, FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
 import { VisualFormattingSettingsModel, ManualLineSettings } from "./settings";
@@ -69,6 +76,13 @@ export class Visual implements IVisual {
     // Service de formatage (Nécessaire pour buildFormattingModel)
     private formattingSettingsService: FormattingSettingsService;
 
+    // License related properties
+    private licenseManager: IVisualLicenseManager;
+    private currentUserValidPlans: ServicePlan[] | undefined;
+    private hasServicePlans: boolean | undefined;
+    private isLicenseUnsupportedEnv: boolean | undefined;
+    private isLicenseInfoAvailable: boolean | undefined;
+
     // Helper centralisé pour persister les propriétés d'une ligne (merge safe + logs)
     private persistStyle(selector: any, properties: any, objectName: string = "styleLigne") {
         // nettoyer les clés undefined
@@ -91,12 +105,43 @@ export class Visual implements IVisual {
         }
     }
 
+    private handleLicenseNotification() {
+        if (this.isLicenseUnsupportedEnv) {
+             this.licenseManager.notifyLicenseRequired(LicenseNotificationType.UnsupportedEnv);
+        } else if (!this.hasServicePlans) {
+             this.licenseManager.notifyLicenseRequired(LicenseNotificationType.VisualIsBlocked);
+        }
+    }
+
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.target = options.element;
         
         // Initialisation du service de formatage
         this.formattingSettingsService = new FormattingSettingsService();
+
+        // License Management
+        this.licenseManager = options.host.licenseManager;
+        
+        this.licenseManager.getAvailableServicePlans()
+            .then((result: LicenseInfoResult) => {
+                this.isLicenseUnsupportedEnv = result.isLicenseUnsupportedEnv;
+                this.isLicenseInfoAvailable = result.isLicenseInfoAvailable;
+
+                if (this.isLicenseInfoAvailable && !this.isLicenseUnsupportedEnv) {
+                    this.currentUserValidPlans = result.plans?.filter((plan: ServicePlan) => 
+                        (plan.state === ServicePlanState.Active || plan.state === ServicePlanState.Warning)
+                    );
+                    this.hasServicePlans = !!this.currentUserValidPlans?.length;
+                }
+
+                this.handleLicenseNotification();
+            })
+            .catch((err) => {
+                console.error("License check failed:", err);
+                this.currentUserValidPlans = undefined;
+                this.hasServicePlans = undefined;
+            });
         
         // Initialisation du gestionnaire de sélection pour les menus contextuels
         this.selectionManager = this.host.createSelectionManager();

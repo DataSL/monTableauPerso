@@ -24,7 +24,13 @@ export declare class Visual implements IVisual {
     private tableBorderRadius;
     private formattingSettings;
     private formattingSettingsService;
+    private licenseManager;
+    private currentUserValidPlans;
+    private hasServicePlans;
+    private isLicenseUnsupportedEnv;
+    private isLicenseInfoAvailable;
     private persistStyle;
+    private handleLicenseNotification;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
     /**
