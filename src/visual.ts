@@ -56,6 +56,7 @@ export class Visual implements IVisual {
     private manualLineKeys: string[] = [];
     
     private areActionButtonsVisible: boolean = true;
+    private selectionManager: powerbi.extensibility.ISelectionManager;
 
     // Bordures globales du tableau
     private tableBorderWidth: number = 1;
@@ -96,6 +97,12 @@ export class Visual implements IVisual {
         
         // Initialisation du service de formatage
         this.formattingSettingsService = new FormattingSettingsService();
+        
+        // Initialisation du gestionnaire de sélection pour les menus contextuels
+        this.selectionManager = this.host.createSelectionManager();
+        
+        // Initialisation du gestionnaire de sélection pour les menus contextuels
+        this.selectionManager = this.host.createSelectionManager();
 
         this.divContainer = document.createElement("div");
         this.divContainer.className = "scroll-wrapper";
@@ -980,7 +987,41 @@ export class Visual implements IVisual {
                         this.showToolbar(row, tr, e.clientX, e.clientY, categories);
                     }
                 };
-                tr.title = "Cliquer pour modifier | Glisser pour déplacer";
+                
+                // MENU CONTEXTUEL POWER BI (clic droit)
+                tr.oncontextmenu = (e: MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Récupérer l'index de la catégorie pour créer le selectionId
+                    const rowIndex = categories.values.findIndex((v: any) => v.toString() === row.originalName);
+                    if (rowIndex !== -1) {
+                        const selectionId = this.host.createSelectionIdBuilder()
+                            .withCategory(categories, rowIndex)
+                            .createSelectionId();
+                        
+                        // Afficher le menu contextuel Power BI natif
+                        this.selectionManager.showContextMenu(selectionId, {
+                            x: e.clientX,
+                            y: e.clientY
+                        });
+                    }
+                };
+                
+                tr.title = "Cliquer pour modifier | Glisser pour déplacer | Clic droit pour options";
+            } else {
+                // Menu contextuel pour les lignes manuelles (sans selectionId)
+                tr.oncontextmenu = (e: MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Pour les lignes virtuelles, menu contextuel simple
+                    this.selectionManager.showContextMenu(null, {
+                        x: e.clientX,
+                        y: e.clientY
+                    });
+                };
+                tr.title = "Glisser pour déplacer | Clic droit pour options";
             }
 
             let finalAmount = "";

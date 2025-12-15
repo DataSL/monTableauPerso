@@ -17,6 +17,7 @@ export declare class Visual implements IVisual {
     private pendingChanges;
     private manualLineKeys;
     private areActionButtonsVisible;
+    private selectionManager;
     private tableBorderWidth;
     private tableBorderColor;
     private tableBorderStyle;
