@@ -130,6 +130,8 @@ export class Visual implements IVisual {
 
                 if (this.isLicenseInfoAvailable && !this.isLicenseUnsupportedEnv) {
                     this.currentUserValidPlans = result.plans?.filter((plan: ServicePlan) => 
+                        // OPTIONNEL : Si vous voulez restreindre à un plan spécifique défini dans l'Espace Partenaires
+                        // (plan.spIdentifier === "mon_id_de_plan_partner_center") &&
                         (plan.state === ServicePlanState.Active || plan.state === ServicePlanState.Warning)
                     );
                     this.hasServicePlans = !!this.currentUserValidPlans?.length;
