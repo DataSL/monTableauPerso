@@ -5,8 +5,8 @@ import VisualConstructorOptions = powerbiVisualsApi.extensibility.visual.VisualC
 import DialogConstructorOptions = powerbiVisualsApi.extensibility.visual.DialogConstructorOptions;
 var powerbiKey: any = "powerbi";
 var powerbi: any = window[powerbiKey];
-var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG: IVisualPlugin = {
-    name: 'monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG',
+var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4: IVisualPlugin = {
+    name: 'monTableauPersoCF0BED4C19044D588EBF656397EF1EB4',
     displayName: 'monTableauPerso',
     class: 'Visual',
     apiVersion: '5.3.0',
@@ -27,6 +27,6 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG: IVisualPlugin = {
 if (typeof powerbi !== "undefined") {
     powerbi.visuals = powerbi.visuals || {};
     powerbi.visuals.plugins = powerbi.visuals.plugins || {};
-    powerbi.visuals.plugins["monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG"] = monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
+    powerbi.visuals.plugins["monTableauPersoCF0BED4C19044D588EBF656397EF1EB4"] = monTableauPersoCF0BED4C19044D588EBF656397EF1EB4;
 }
-export default monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
+export default monTableauPersoCF0BED4C19044D588EBF656397EF1EB4;
