@@ -9,7 +9,7 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG: IVisualPlugin = {
     name: 'monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG',
     displayName: 'monTableauPerso',
     class: 'Visual',
-    apiVersion: '5.3.0',
+    apiVersion: '5.10.0',
     create: (options?: VisualConstructorOptions) => {
         if (Visual) {
             return new Visual(options);

@@ -18,7 +18,7 @@ import { formattingSettings, FormattingSettingsService } from "powerbi-visuals-u
 import { VisualFormattingSettingsModel, ManualLineSettings } from "./settings";
 
 import "../style/visual.less";
-
+const DEV_MODE = false; // Passez à false pour la prod
 interface RowData {
     originalName: string;
     label: string;
@@ -106,6 +106,7 @@ export class Visual implements IVisual {
     }
 
     private handleLicenseNotification() {
+        if (DEV_MODE) return; // Désactive tout en dev
         if (this.isLicenseUnsupportedEnv) {
              this.licenseManager.notifyLicenseRequired(LicenseNotificationType.UnsupportedEnv);
         } else if (!this.hasServicePlans) {
