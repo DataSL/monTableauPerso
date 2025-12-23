@@ -18,7 +18,7 @@ import { formattingSettings, FormattingSettingsService } from "powerbi-visuals-u
 import { VisualFormattingSettingsModel, ManualLineSettings } from "./settings";
 
 import "../style/visual.less";
-const DEV_MODE = false; // Passez à false pour la prod
+const DEV_MODE = true // Passez à false pour la prod
 interface RowData {
     originalName: string;
     label: string;
@@ -62,7 +62,7 @@ export class Visual implements IVisual {
     private pendingChanges: Map<string, any> = new Map();
     private manualLineKeys: string[] = [];
     
-    private areActionButtonsVisible: boolean = true;
+    private areActionButtonsVisible: boolean = false;
     private selectionManager: powerbi.extensibility.ISelectionManager;
 
     // Bordures globales du tableau
@@ -173,20 +173,44 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions) {
-        // Initialiser le modèle de formatage
-        this.formattingSettings = new VisualFormattingSettingsModel();
+        // Initialiser et remplir le modèle de formatage depuis Power BI
+        if (options.dataViews && options.dataViews[0]) {
+            this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(
+                VisualFormattingSettingsModel,
+                options.dataViews[0]
+            );
+            this.metadata = options.dataViews[0].metadata;
+        }
+
+        // Utiliser la valeur du toggle du modèle de formatage
+        let showActionButton = true;
+        if (this.formattingSettings && this.formattingSettings.actionButton && typeof this.formattingSettings.actionButton.show.value === "boolean") {
+            showActionButton = this.formattingSettings.actionButton.show.value;
+        }
+
 
         // Nettoyage sécurisé
         while (this.flexContainer.firstChild) {
             this.flexContainer.removeChild(this.flexContainer.firstChild);
         }
-        
+
         this.allRowsData = [];
         this.manualLineKeys = [];
 
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
+
+        // Charger la couleur de fond du conteneur principal (autour du tableau)
+        let containerBg = "#fff";
+        if (this.metadata && this.metadata.objects && this.metadata.objects["backgroundContainer"] && this.metadata.objects["backgroundContainer"]["color"]) {
+            const bgObj = this.metadata.objects["backgroundContainer"]["color"];
+            if (bgObj && bgObj.solid && bgObj.solid.color) {
+                containerBg = bgObj.solid.color;
+            }
+        }
+        this.divContainer.style.background = containerBg;
+        // Le fond du tableau reste géré par le CSS (toujours blanc)
 
         // Charger les bordures globales du tableau
         if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
@@ -363,54 +387,53 @@ export class Visual implements IVisual {
             this.renderTableContent(table, colTitle, colRows, i, categories);
             this.flexContainer.appendChild(colDiv);
         }
-        
-        // Boutons d'actions
-        const toggleBtn = document.createElement("button");
-        toggleBtn.type = "button";
-        toggleBtn.className = "toggle-actions-button";
-        toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
-        toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
-        toggleBtn.style.display = "flex";
-        toggleBtn.style.alignItems = "center";
-        toggleBtn.style.justifyContent = "center";
-        toggleBtn.style.minWidth = "32px";
-        toggleBtn.style.height = "32px";
-        toggleBtn.style.cursor = "pointer";
-        toggleBtn.style.fontSize = "16px";
-        toggleBtn.style.color = "#007acc";
-        toggleBtn.style.border = "1px solid #b3d7ff";
-        toggleBtn.style.borderRadius = "50%";
-        toggleBtn.style.margin = "6px";
-        toggleBtn.style.background = "white";
-        toggleBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
-        toggleBtn.style.transition = "all 0.2s";
-        toggleBtn.style.zIndex = "1000";
-        
-        toggleBtn.onmouseover = () => { 
-            toggleBtn.style.background = "#e6f2ff";
-            toggleBtn.style.borderColor = "#007acc";
-            toggleBtn.style.transform = "scale(1.1)";
-        };
-        toggleBtn.onmouseout = () => { 
-            toggleBtn.style.background = "white";
-            toggleBtn.style.borderColor = "#b3d7ff";
-            toggleBtn.style.transform = "scale(1)";
-        };
-        
-        toggleBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.areActionButtonsVisible = !this.areActionButtonsVisible;
+
+        // Bouton d'action uniquement si activé
+        if (showActionButton) {
+            const toggleBtn = document.createElement("button");
+            toggleBtn.type = "button";
+            toggleBtn.className = "toggle-actions-button";
             toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
             toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
-            
-            addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            if (removeColumnDiv) {
-                removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            }
-        };
-        this.flexContainer.appendChild(toggleBtn);
+            toggleBtn.style.display = "flex";
+            toggleBtn.style.alignItems = "center";
+            toggleBtn.style.justifyContent = "center";
+            toggleBtn.style.minWidth = "32px";
+            toggleBtn.style.height = "32px";
+            toggleBtn.style.cursor = "pointer";
+            toggleBtn.style.fontSize = "16px";
+            toggleBtn.style.color = "#007acc";
+            toggleBtn.style.border = "1px solid #b3d7ff";
+            toggleBtn.style.borderRadius = "50%";
+            toggleBtn.style.margin = "6px";
+            toggleBtn.style.background = "white";
+            toggleBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
+            toggleBtn.style.transition = "all 0.2s";
+            toggleBtn.style.zIndex = "1000";
+            toggleBtn.onmouseover = () => { 
+                toggleBtn.style.background = "#e6f2ff";
+                toggleBtn.style.borderColor = "#007acc";
+                toggleBtn.style.transform = "scale(1.1)";
+            };
+            toggleBtn.onmouseout = () => { 
+                toggleBtn.style.background = "white";
+                toggleBtn.style.borderColor = "#b3d7ff";
+                toggleBtn.style.transform = "scale(1)";
+            };
+            toggleBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.areActionButtonsVisible = !this.areActionButtonsVisible;
+                toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
+                toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
+                addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                if (removeColumnDiv) {
+                    removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                }
+            };
+            this.flexContainer.appendChild(toggleBtn);
+        }
         
         const addColumnDiv = document.createElement("button");
         addColumnDiv.type = "button";

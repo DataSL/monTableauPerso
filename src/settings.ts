@@ -1,3 +1,4 @@
+
 "use strict";
 
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
@@ -6,6 +7,39 @@ import powerbi from "powerbi-visuals-api";
 import FormattingSettingsCard = formattingSettings.SimpleCard;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
+
+// =========================================================
+// AFFICHAGE DU BOUTON D'ACTION
+// =========================================================
+export class ActionButtonSettings extends FormattingSettingsCard {
+    name: string = "actionButton";
+    displayName: string = "Bouton d'action";
+
+    show = new formattingSettings.ToggleSwitch({
+        name: "show",
+        displayName: "Afficher le bouton d'action",
+        value: true
+    });
+
+    slices: Array<FormattingSettingsSlice> = [this.show];
+}
+
+
+// =========================================================
+// FOND DU CONTENEUR TABLEAU
+// =========================================================
+export class BackgroundContainerSettings extends FormattingSettingsCard {
+    name: string = "backgroundContainer";
+    displayName: string = "Fond du conteneur tableau";
+
+    color = new formattingSettings.ColorPicker({
+        name: "color",
+        displayName: "Couleur de fond",
+        value: { value: "#fff" }
+    });
+
+    slices: Array<FormattingSettingsSlice> = [this.color];
+}
 
 // =========================================================
 // 0. TITRES COLONNES (Génération dynamique)
@@ -241,11 +275,15 @@ export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     selectionMenu = new SelectionMenuSettings();
     styleLigne = new StyleLigneSettings();
     tableBorders = new TableBordersSettings();
-    
+    backgroundContainer = new BackgroundContainerSettings();
+    actionButton = new ActionButtonSettings();
+
     cards: FormattingSettingsCard[] = [
         this.titresColonnes,
         this.selectionMenu,
         this.styleLigne,
-        this.tableBorders
+        this.tableBorders,
+        this.backgroundContainer,
+        this.actionButton
     ];
 }

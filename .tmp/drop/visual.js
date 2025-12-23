@@ -10,12 +10,38 @@ var monTableauPersoCF0BED4C19044D588EBF656397EF1EB4_DEBUG;
 /* harmony export */   SC: () => (/* binding */ VisualFormattingSettingsModel),
 /* harmony export */   gj: () => (/* binding */ ManualLineSettings)
 /* harmony export */ });
-/* unused harmony exports TitresColonnesSettings, SelectionMenuSettings, StyleLigneSettings, TableBordersSettings */
+/* unused harmony exports ActionButtonSettings, BackgroundContainerSettings, TitresColonnesSettings, SelectionMenuSettings, StyleLigneSettings, TableBordersSettings */
 /* harmony import */ var powerbi_visuals_utils_formattingmodel__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(674);
 
 
 var FormattingSettingsCard = powerbi_visuals_utils_formattingmodel__WEBPACK_IMPORTED_MODULE_0__/* .formattingSettings.SimpleCard */ .z.Tn;
 var FormattingSettingsModel = powerbi_visuals_utils_formattingmodel__WEBPACK_IMPORTED_MODULE_0__/* .formattingSettings.Model */ .z.Kx;
+// =========================================================
+// AFFICHAGE DU BOUTON D'ACTION
+// =========================================================
+class ActionButtonSettings extends FormattingSettingsCard {
+    name = "actionButton";
+    displayName = "Bouton d'action";
+    show = new powerbi_visuals_utils_formattingmodel__WEBPACK_IMPORTED_MODULE_0__/* .formattingSettings.ToggleSwitch */ .z.jF({
+        name: "show",
+        displayName: "Afficher le bouton d'action",
+        value: true
+    });
+    slices = [this.show];
+}
+// =========================================================
+// FOND DU CONTENEUR TABLEAU
+// =========================================================
+class BackgroundContainerSettings extends FormattingSettingsCard {
+    name = "backgroundContainer";
+    displayName = "Fond du conteneur tableau";
+    color = new powerbi_visuals_utils_formattingmodel__WEBPACK_IMPORTED_MODULE_0__/* .formattingSettings.ColorPicker */ .z.sk({
+        name: "color",
+        displayName: "Couleur de fond",
+        value: { value: "#fff" }
+    });
+    slices = [this.color];
+}
 // =========================================================
 // 0. TITRES COLONNES (Génération dynamique)
 // =========================================================
@@ -228,11 +254,15 @@ class VisualFormattingSettingsModel extends FormattingSettingsModel {
     selectionMenu = new SelectionMenuSettings();
     styleLigne = new StyleLigneSettings();
     tableBorders = new TableBordersSettings();
+    backgroundContainer = new BackgroundContainerSettings();
+    actionButton = new ActionButtonSettings();
     cards = [
         this.titresColonnes,
         this.selectionMenu,
         this.styleLigne,
-        this.tableBorders
+        this.tableBorders,
+        this.backgroundContainer,
+        this.actionButton
     ];
 }
 
@@ -846,7 +876,7 @@ class ContainerItem extends (/* unused pure expression or super */ null && (Name
 
 
 
-const DEV_MODE = false; // Passez à false pour la prod
+const DEV_MODE = true; // Passez à false pour la prod
 class Visual {
     target;
     host;
@@ -860,7 +890,7 @@ class Visual {
     toolbar;
     pendingChanges = new Map();
     manualLineKeys = [];
-    areActionButtonsVisible = true;
+    areActionButtonsVisible = false;
     selectionManager;
     // Bordures globales du tableau
     tableBorderWidth = 1;
@@ -957,8 +987,16 @@ class Visual {
         });
     }
     update(options) {
-        // Initialiser le modèle de formatage
-        this.formattingSettings = new _settings__WEBPACK_IMPORTED_MODULE_1__/* .VisualFormattingSettingsModel */ .SC();
+        // Initialiser et remplir le modèle de formatage depuis Power BI
+        if (options.dataViews && options.dataViews[0]) {
+            this.formattingSettings = this.formattingSettingsService.populateFormattingSettingsModel(_settings__WEBPACK_IMPORTED_MODULE_1__/* .VisualFormattingSettingsModel */ .SC, options.dataViews[0]);
+            this.metadata = options.dataViews[0].metadata;
+        }
+        // Utiliser la valeur du toggle du modèle de formatage
+        let showActionButton = true;
+        if (this.formattingSettings && this.formattingSettings.actionButton && typeof this.formattingSettings.actionButton.show.value === "boolean") {
+            showActionButton = this.formattingSettings.actionButton.show.value;
+        }
         // Nettoyage sécurisé
         while (this.flexContainer.firstChild) {
             this.flexContainer.removeChild(this.flexContainer.firstChild);
@@ -968,6 +1006,16 @@ class Visual {
         const dataView = options.dataViews[0];
         this.metadata = dataView ? dataView.metadata : null;
         this.categoricalData = dataView && dataView.categorical ? dataView.categorical : null;
+        // Charger la couleur de fond du conteneur principal (autour du tableau)
+        let containerBg = "#fff";
+        if (this.metadata && this.metadata.objects && this.metadata.objects["backgroundContainer"] && this.metadata.objects["backgroundContainer"]["color"]) {
+            const bgObj = this.metadata.objects["backgroundContainer"]["color"];
+            if (bgObj && bgObj.solid && bgObj.solid.color) {
+                containerBg = bgObj.solid.color;
+            }
+        }
+        this.divContainer.style.background = containerBg;
+        // Le fond du tableau reste géré par le CSS (toujours blanc)
         // Charger les bordures globales du tableau
         if (this.metadata && this.metadata.objects && this.metadata.objects["tableBorders"]) {
             const tb = this.metadata.objects["tableBorders"];
@@ -1156,50 +1204,52 @@ class Visual {
             this.renderTableContent(table, colTitle, colRows, i, categories);
             this.flexContainer.appendChild(colDiv);
         }
-        // Boutons d'actions
-        const toggleBtn = document.createElement("button");
-        toggleBtn.type = "button";
-        toggleBtn.className = "toggle-actions-button";
-        toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
-        toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
-        toggleBtn.style.display = "flex";
-        toggleBtn.style.alignItems = "center";
-        toggleBtn.style.justifyContent = "center";
-        toggleBtn.style.minWidth = "32px";
-        toggleBtn.style.height = "32px";
-        toggleBtn.style.cursor = "pointer";
-        toggleBtn.style.fontSize = "16px";
-        toggleBtn.style.color = "#007acc";
-        toggleBtn.style.border = "1px solid #b3d7ff";
-        toggleBtn.style.borderRadius = "50%";
-        toggleBtn.style.margin = "6px";
-        toggleBtn.style.background = "white";
-        toggleBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
-        toggleBtn.style.transition = "all 0.2s";
-        toggleBtn.style.zIndex = "1000";
-        toggleBtn.onmouseover = () => {
-            toggleBtn.style.background = "#e6f2ff";
-            toggleBtn.style.borderColor = "#007acc";
-            toggleBtn.style.transform = "scale(1.1)";
-        };
-        toggleBtn.onmouseout = () => {
-            toggleBtn.style.background = "white";
-            toggleBtn.style.borderColor = "#b3d7ff";
-            toggleBtn.style.transform = "scale(1)";
-        };
-        toggleBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.areActionButtonsVisible = !this.areActionButtonsVisible;
+        // Bouton d'action uniquement si activé
+        if (showActionButton) {
+            const toggleBtn = document.createElement("button");
+            toggleBtn.type = "button";
+            toggleBtn.className = "toggle-actions-button";
             toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
             toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
-            addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            if (removeColumnDiv) {
-                removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
-            }
-        };
-        this.flexContainer.appendChild(toggleBtn);
+            toggleBtn.style.display = "flex";
+            toggleBtn.style.alignItems = "center";
+            toggleBtn.style.justifyContent = "center";
+            toggleBtn.style.minWidth = "32px";
+            toggleBtn.style.height = "32px";
+            toggleBtn.style.cursor = "pointer";
+            toggleBtn.style.fontSize = "16px";
+            toggleBtn.style.color = "#007acc";
+            toggleBtn.style.border = "1px solid #b3d7ff";
+            toggleBtn.style.borderRadius = "50%";
+            toggleBtn.style.margin = "6px";
+            toggleBtn.style.background = "white";
+            toggleBtn.style.boxShadow = "0 1px 4px rgba(0,0,0,0.08)";
+            toggleBtn.style.transition = "all 0.2s";
+            toggleBtn.style.zIndex = "1000";
+            toggleBtn.onmouseover = () => {
+                toggleBtn.style.background = "#e6f2ff";
+                toggleBtn.style.borderColor = "#007acc";
+                toggleBtn.style.transform = "scale(1.1)";
+            };
+            toggleBtn.onmouseout = () => {
+                toggleBtn.style.background = "white";
+                toggleBtn.style.borderColor = "#b3d7ff";
+                toggleBtn.style.transform = "scale(1)";
+            };
+            toggleBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.areActionButtonsVisible = !this.areActionButtonsVisible;
+                toggleBtn.textContent = this.areActionButtonsVisible ? "◀" : "▶";
+                toggleBtn.title = this.areActionButtonsVisible ? "Masquer les boutons d'action" : "Afficher les boutons d'action";
+                addColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                addLineBtn.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                if (removeColumnDiv) {
+                    removeColumnDiv.style.display = this.areActionButtonsVisible ? "flex" : "none";
+                }
+            };
+            this.flexContainer.appendChild(toggleBtn);
+        }
         const addColumnDiv = document.createElement("button");
         addColumnDiv.type = "button";
         addColumnDiv.className = "add-column-button";

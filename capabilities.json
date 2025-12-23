@@ -808,6 +808,24 @@
         },
         "borderRadius": { "displayName": "Arrondi", "type": { "numeric": true } }
       }
+    },
+    "backgroundContainer": {
+      "displayName": "Fond du conteneur tableau",
+      "properties": {
+        "color": {
+          "displayName": "Couleur de fond",
+          "type": { "fill": { "solid": { "color": true } } }
+        }
+      }
+    },
+    "actionButton": {
+      "displayName": "Bouton d'action",
+      "properties": {
+        "show": {
+          "displayName": "Afficher le bouton d'action",
+          "type": { "bool": true }
+        }
+      }
     }
   },
   "dataViewMappings": [

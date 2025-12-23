@@ -3,6 +3,18 @@ import powerbi from "powerbi-visuals-api";
 import FormattingSettingsCard = formattingSettings.SimpleCard;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
+export declare class ActionButtonSettings extends FormattingSettingsCard {
+    name: string;
+    displayName: string;
+    show: formattingSettings.ToggleSwitch;
+    slices: Array<FormattingSettingsSlice>;
+}
+export declare class BackgroundContainerSettings extends FormattingSettingsCard {
+    name: string;
+    displayName: string;
+    color: formattingSettings.ColorPicker;
+    slices: Array<FormattingSettingsSlice>;
+}
 export declare class TitresColonnesSettings extends FormattingSettingsCard {
     name: string;
     displayName: string;
@@ -71,5 +83,7 @@ export declare class VisualFormattingSettingsModel extends FormattingSettingsMod
     selectionMenu: SelectionMenuSettings;
     styleLigne: StyleLigneSettings;
     tableBorders: TableBordersSettings;
+    backgroundContainer: BackgroundContainerSettings;
+    actionButton: ActionButtonSettings;
     cards: FormattingSettingsCard[];
 }

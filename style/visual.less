@@ -5,6 +5,8 @@
     overflow-x: hidden;
     padding: 5px;
     box-sizing: border-box;
+    /* L'arrière-plan général du visuel doit être appliqué ici, pas sur le tableau */
+    background: var(--pbi-background, transparent);
 }
 
 .accounting-container {
@@ -16,6 +18,9 @@
     /* Les bordures sont maintenant appliquées dynamiquement depuis TypeScript */
     box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
     box-sizing: border-box;
+    /* Fond blanc par défaut, mais sera recouvert si Power BI applique un fond */
+    background: #fff;
+    /* Si Power BI applique un fond, il recouvre le visuel, donc ce fond blanc ne sera visible que si l'arrière-plan est désactivé */
 }
 
 /* SUPPRIMÉ: Pseudo-élément qui rajoutait une bordure droite fixe */
@@ -35,6 +40,7 @@ table {
     border-spacing: 0;
     font-family: 'Segoe UI', sans-serif;
     table-layout: fixed;
+    background: transparent !important; /* Le tableau lui-même ne doit pas avoir de fond */
 }
 
 thead th {
