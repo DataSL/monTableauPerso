@@ -18,7 +18,7 @@ import { formattingSettings, FormattingSettingsService } from "powerbi-visuals-u
 import { VisualFormattingSettingsModel, ManualLineSettings } from "./settings";
 
 import "../style/visual.less";
-const DEV_MODE = true // Passez à false pour la prod
+const DEV_MODE = false // Passez à false pour la prod
 interface RowData {
     originalName: string;
     label: string;
