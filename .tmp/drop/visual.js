@@ -997,6 +997,19 @@ class Visual {
         if (this.formattingSettings && this.formattingSettings.actionButton && typeof this.formattingSettings.actionButton.show.value === "boolean") {
             showActionButton = this.formattingSettings.actionButton.show.value;
         }
+        // Si le bouton d'action est masqué, on retire tout le padding et on force la hauteur à 100%
+        if (!showActionButton) {
+            this.divContainer.style.padding = "0";
+            this.divContainer.style.margin = "0";
+            this.divContainer.style.height = "100%";
+            this.flexContainer.style.height = "100%";
+        }
+        else {
+            this.divContainer.style.padding = "5px";
+            this.divContainer.style.margin = "";
+            this.divContainer.style.height = "";
+            this.flexContainer.style.height = "";
+        }
         // Nettoyage sécurisé
         while (this.flexContainer.firstChild) {
             this.flexContainer.removeChild(this.flexContainer.firstChild);
