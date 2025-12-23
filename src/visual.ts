@@ -89,7 +89,7 @@ export class Visual implements IVisual {
         Object.keys(properties || {}).forEach(k => { if (properties[k] === undefined) delete properties[k]; });
         try {
             // eslint-disable-next-line no-console
-            console.log("PERSIST STYLE -> object:", objectName, "selector:", selector, "props:", properties);
+           
             this.host.persistProperties({
                 merge: [{
                     objectName: objectName,
@@ -97,11 +97,9 @@ export class Visual implements IVisual {
                     properties: properties
                 }]
             });
-            // eslint-disable-next-line no-console
-            console.log("PERSIST STYLE OK ->", objectName);
+
         } catch (err) {
-            // eslint-disable-next-line no-console
-            console.error("PERSIST STYLE ERROR:", err);
+
         }
     }
 
@@ -234,12 +232,6 @@ export class Visual implements IVisual {
             if (tb["borderRadius"] !== undefined) this.tableBorderRadius = tb["borderRadius"] as number;
         }
 
-        console.log("🔲 BORDURES CHARGÉES:", {
-            width: this.tableBorderWidth,
-            color: this.tableBorderColor,
-            style: this.tableBorderStyle,
-            radius: this.tableBorderRadius
-        });
 
         // 1. TITRES - Initialisation dynamique
         this.columnTitles = [];
@@ -910,7 +902,7 @@ export class Visual implements IVisual {
                     tr.style.opacity = "0.5";
                     // DEBUG
                     // eslint-disable-next-line no-console
-                    console.log("DRAG START:", dragData);
+
                 }
             };
             
@@ -926,9 +918,7 @@ export class Visual implements IVisual {
                 e.preventDefault();
                 e.stopPropagation();
                 tr.style.borderTop = "";
-                // DEBUG
-                // eslint-disable-next-line no-console
-                console.log("DROP ON ROW", { target: row.originalName });
+
                 if (e.dataTransfer) {
                     const dataStr = e.dataTransfer.getData("text/plain");
                     const data = JSON.parse(dataStr);
@@ -959,7 +949,7 @@ export class Visual implements IVisual {
                                 this.persistStyle(null, { col: colIndex, pos: newSortIndex }, draggedOriginalName);
                                 // DEBUG
                                 // eslint-disable-next-line no-console
-                                console.log("PERSIST (virtual) ->", { object: draggedOriginalName, props: { col: colIndex, pos: newSortIndex } });
+                               
                                 while (this.flexContainer.firstChild) {
                                     this.flexContainer.removeChild(this.flexContainer.firstChild);
                                 }
@@ -1017,12 +1007,12 @@ export class Visual implements IVisual {
                                 Object.keys(existingProps).forEach(k => { if (existingProps[k] === undefined) delete existingProps[k]; });
                                 // DEBUG before persist
                                 // eslint-disable-next-line no-console
-                                console.log("PERSIST (category) -> selector:", selectionId.getSelector(), "props:", existingProps);
+                               
                                 // nouveau : persistance centralisée
                                 this.persistStyle(selectionId.getSelector(), existingProps, "styleLigne");
                                 // DEBUG after persist
                                 // eslint-disable-next-line no-console
-                                console.log("PERSIST DONE (category) for", draggedOriginalName);
+                                
                                 const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                                 if (draggedRowData) {
                                     draggedRowData.columnIndex = colIndex;
@@ -1204,9 +1194,8 @@ export class Visual implements IVisual {
                         });
                         // nouveau : persistance centralisée
                         this.persistStyle(null, { col: colIndex, pos: newSortIndex }, draggedOriginalName);
-                        // DEBUG
-                        // eslint-disable-next-line no-console
-                        console.log("PERSIST (virtual) ->", { object: draggedOriginalName, props: { col: colIndex, pos: newSortIndex } });
+
+                        
                         while (this.flexContainer.firstChild) {
                             this.flexContainer.removeChild(this.flexContainer.firstChild);
                         }
@@ -1262,14 +1251,11 @@ export class Visual implements IVisual {
                         existingProps.ordreTri = newSortIndex;
                         // CLEAN undefined keys
                         Object.keys(existingProps).forEach(k => { if (existingProps[k] === undefined) delete existingProps[k]; });
-                        // DEBUG before persist
-                        // eslint-disable-next-line no-console
-                        console.log("PERSIST (category) -> selector:", selectionId.getSelector(), "props:", existingProps);
+                       
                         // nouveau : persistance centralisée
                         this.persistStyle(selectionId.getSelector(), existingProps, "styleLigne");
-                        // DEBUG after persist
-                        // eslint-disable-next-line no-console
-                        console.log("PERSIST DONE (category) for", draggedOriginalName);
+                    
+                       
                         const draggedRowData = this.allRowsData.find(r => r.originalName === draggedOriginalName);
                         if (draggedRowData) {
                             draggedRowData.columnIndex = colIndex;
@@ -1309,7 +1295,7 @@ export class Visual implements IVisual {
     }
 
     private showToolbar(row: RowData, tr: HTMLTableRowElement, x: number, y: number, categories: any) {
-        console.log("🟢 showToolbar called for:", row.originalName);
+
 
         if (!categories) {
             console.error("🔴 Categories is null");
@@ -1338,12 +1324,7 @@ export class Visual implements IVisual {
         this.toolbar.style.top = top + "px";
 
         const index = categories.values.findIndex(v => v.toString() === row.originalName);
-        console.log("🟢 Index found:", index);
 
-        if (index === -1) {
-            console.error("🔴 Index not found for", row.originalName);
-            return;
-        }
 
         let selectionIdBuilder = this.host.createSelectionIdBuilder();
         selectionIdBuilder = selectionIdBuilder.withCategory(categories, index);

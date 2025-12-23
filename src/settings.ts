@@ -239,7 +239,7 @@ export class ManualLineSettings extends FormattingSettingsCard {
 // =========================================================
 export class TableBordersSettings extends FormattingSettingsCard {
     name: string = "tableBorders";
-    displayName: string = "🔲 BORDURES TABLEAU";
+    displayName: string = "BORDURES TABLEAU";
 
     borderWidth = new formattingSettings.NumUpDown({
         name: "borderWidth", displayName: "Largeur", value: 1
